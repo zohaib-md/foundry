@@ -1,4 +1,4 @@
-# Page Builder POC
+# Page Builder POC(foundry)
 
 A lightweight, proof-of-concept visual page builder inspired by Shopify Page Builder, Wix Studio, and Webflow. Built to demonstrate clean architecture, scalable component state management, and clear API boundaries.
 
