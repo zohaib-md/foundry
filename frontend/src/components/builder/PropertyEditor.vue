@@ -1,129 +1,388 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { useBuilderStore } from '../../stores/useBuilderStore';
+import { FONT_FAMILIES, FONT_SIZES, FONT_WEIGHTS } from '../../types/builder';
 
 const store = useBuilderStore();
 
-const selectedComponent = computed(() => 
-  store.components.find(c => c.id === store.selectedComponentId)
-);
+const selectedComponent = computed(() => store.selectedComponent);
 
 const updateProp = (key: string, value: any) => {
   if (store.selectedComponentId) {
     store.updateComponentProps(store.selectedComponentId, { [key]: value });
   }
 };
+
+const updateStyle = (key: string, value: any) => {
+  if (store.selectedComponentId) {
+    store.updateComponentStyles(store.selectedComponentId, { [key]: value });
+  }
+};
 </script>
 
 <template>
-  <div class="w-80 bg-white border-l border-gray-200 h-full flex flex-col">
-    <div class="p-4 border-b border-gray-200 flex justify-between items-center">
-      <h2 class="text-lg font-semibold text-gray-800">Properties</h2>
-      <span v-if="selectedComponent" class="text-xs px-2 py-1 bg-blue-100 text-blue-800 rounded uppercase font-bold tracking-wider">
-        {{ selectedComponent.type }}
-      </span>
+  <div class="property-panel">
+    
+    <div class="panel-header">
+      <h2>Properties</h2>
+      <span v-if="selectedComponent" class="type-badge">{{ selectedComponent.type }}</span>
     </div>
 
-    <div class="flex-1 overflow-y-auto p-4">
-      <div v-if="!selectedComponent" class="text-center text-gray-500 mt-8">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto text-gray-300 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122" />
+    <div class="panel-content">
+      
+      <!-- Empty State -->
+      <div v-if="!selectedComponent" class="empty-state">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
         </svg>
         <p>Select a component to edit its properties.</p>
       </div>
 
-      <div v-else class="space-y-5">
-        <!-- Common Properties -->
-        <div class="space-y-2" v-if="'text' in selectedComponent.props">
-          <label class="block text-sm font-medium text-gray-700">Content</label>
-          <textarea
-            class="w-full border border-gray-300 rounded-md p-2 text-sm focus:ring-blue-500 focus:border-blue-500"
-            rows="3"
-            :value="selectedComponent.props.text"
-            @input="e => updateProp('text', (e.target as HTMLTextAreaElement).value)"
-          ></textarea>
-        </div>
+      <div v-else class="properties-list">
+        
+        <!-- SECTION: CONTENT -->
+        <div class="property-section">
+          <h3>Content</h3>
 
-        <div class="space-y-2" v-if="'url' in selectedComponent.props">
-          <label class="block text-sm font-medium text-gray-700">URL / Link</label>
-          <input
-            type="text"
-            class="w-full border border-gray-300 rounded-md p-2 text-sm focus:ring-blue-500 focus:border-blue-500"
-            :value="selectedComponent.props.url"
-            @input="e => updateProp('url', (e.target as HTMLInputElement).value)"
-          />
-        </div>
-
-        <div class="space-y-2" v-if="'alignment' in selectedComponent.props">
-          <label class="block text-sm font-medium text-gray-700">Alignment</label>
-          <div class="flex rounded-md shadow-sm">
-            <button
-              v-for="align in ['left', 'center', 'right']"
-              :key="align"
-              class="flex-1 px-3 py-1.5 text-sm border border-gray-300 first:rounded-l-md last:rounded-r-md -ml-px hover:bg-gray-50 focus:z-10 focus:ring-1 focus:ring-blue-500"
-              :class="selectedComponent.props.alignment === align ? 'bg-blue-50 text-blue-700 border-blue-500 z-10' : 'bg-white text-gray-700'"
-              @click="updateProp('alignment', align)"
-            >
-              <span class="capitalize">{{ align }}</span>
-            </button>
+          <div class="form-group" v-if="'text' in selectedComponent.props">
+            <label>Text</label>
+            <textarea
+              class="input-control"
+              rows="3"
+              :value="selectedComponent.props.text"
+              @input="e => updateProp('text', (e.target as HTMLTextAreaElement).value)"
+            ></textarea>
           </div>
-        </div>
 
-        <div class="space-y-2" v-if="'color' in selectedComponent.props">
-          <label class="block text-sm font-medium text-gray-700">Text Color</label>
-          <div class="flex items-center gap-3">
-             <input
-              type="color"
-              class="h-8 w-14 rounded cursor-pointer"
-              :value="selectedComponent.props.color"
-              @input="e => updateProp('color', (e.target as HTMLInputElement).value)"
+          <div class="form-group" v-if="'url' in selectedComponent.props">
+            <label>Link URL</label>
+            <input
+              type="text"
+              class="input-control"
+              :value="selectedComponent.props.url"
+              @input="e => updateProp('url', (e.target as HTMLInputElement).value)"
             />
-            <span class="text-sm font-mono text-gray-500">{{ selectedComponent.props.color }}</span>
+          </div>
+
+          <!-- Specific Props -->
+          <div class="form-group" v-if="selectedComponent.type === 'heading'">
+            <label>Heading Level</label>
+            <select
+              class="input-control"
+              :value="selectedComponent.props.level"
+              @change="e => updateProp('level', (e.target as HTMLSelectElement).value)"
+            >
+              <option value="h1">Heading 1 (H1)</option>
+              <option value="h2">Heading 2 (H2)</option>
+              <option value="h3">Heading 3 (H3)</option>
+              <option value="h4">Heading 4 (H4)</option>
+            </select>
+          </div>
+
+          <div class="form-group" v-if="selectedComponent.type === 'button'">
+            <label>Button Style</label>
+            <select
+              class="input-control"
+              :value="selectedComponent.props.variant"
+              @change="e => updateProp('variant', (e.target as HTMLSelectElement).value)"
+            >
+              <option value="primary">Primary (Solid)</option>
+              <option value="secondary">Secondary (Light)</option>
+              <option value="outline">Outline</option>
+            </select>
+          </div>
+
+          <div class="form-group" v-if="selectedComponent.type === 'image'">
+            <label>Image Width</label>
+            <input
+              type="text"
+              class="input-control"
+              placeholder="e.g. 100%, 300px"
+              :value="selectedComponent.props.width"
+              @input="e => updateProp('width', (e.target as HTMLInputElement).value)"
+            />
           </div>
         </div>
 
-        <!-- Specific Properties -->
-        <div class="space-y-2" v-if="selectedComponent.type === 'heading'">
-          <label class="block text-sm font-medium text-gray-700">Heading Level</label>
-          <select
-            class="w-full border border-gray-300 rounded-md p-2 text-sm focus:ring-blue-500 focus:border-blue-500"
-            :value="selectedComponent.props.level"
-            @change="e => updateProp('level', (e.target as HTMLSelectElement).value)"
-          >
-            <option value="h1">Heading 1 (H1)</option>
-            <option value="h2">Heading 2 (H2)</option>
-            <option value="h3">Heading 3 (H3)</option>
-            <option value="h4">Heading 4 (H4)</option>
-            <option value="h5">Heading 5 (H5)</option>
-            <option value="h6">Heading 6 (H6)</option>
-          </select>
-        </div>
+        <div class="section-divider"></div>
 
-        <div class="space-y-2" v-if="selectedComponent.type === 'button'">
-          <label class="block text-sm font-medium text-gray-700">Button Style</label>
-          <select
-            class="w-full border border-gray-300 rounded-md p-2 text-sm focus:ring-blue-500 focus:border-blue-500"
-            :value="selectedComponent.props.variant"
-            @change="e => updateProp('variant', (e.target as HTMLSelectElement).value)"
-          >
-            <option value="primary">Primary (Solid)</option>
-            <option value="secondary">Secondary (Light)</option>
-            <option value="outline">Outline</option>
-          </select>
-        </div>
+        <!-- SECTION: TYPOGRAPHY -->
+        <div class="property-section" v-if="['heading', 'text', 'button'].includes(selectedComponent.type)">
+          <h3>Typography</h3>
 
-        <div class="space-y-2" v-if="selectedComponent.type === 'image'">
-          <label class="block text-sm font-medium text-gray-700">Image Width</label>
-          <input
-            type="text"
-            class="w-full border border-gray-300 rounded-md p-2 text-sm focus:ring-blue-500 focus:border-blue-500"
-            placeholder="e.g. 100%, 300px"
-            :value="selectedComponent.props.width"
-            @input="e => updateProp('width', (e.target as HTMLInputElement).value)"
-          />
+          <div class="form-group">
+            <label>Font Family</label>
+            <select
+              class="input-control"
+              :value="selectedComponent.styles?.fontFamily || 'Geist'"
+              @change="e => updateStyle('fontFamily', (e.target as HTMLSelectElement).value)"
+            >
+              <option v-for="font in FONT_FAMILIES" :key="font" :value="font">{{ font }}</option>
+            </select>
+          </div>
+
+          <div class="grid-2-col">
+            <div class="form-group">
+              <label>Weight</label>
+              <select
+                class="input-control"
+                :value="selectedComponent.styles?.fontWeight || '400'"
+                @change="e => updateStyle('fontWeight', (e.target as HTMLSelectElement).value)"
+              >
+                <option v-for="weight in FONT_WEIGHTS" :key="weight.value" :value="weight.value">{{ weight.label }}</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label>Size</label>
+              <select
+                class="input-control"
+                :value="selectedComponent.styles?.fontSize || ''"
+                @change="e => updateStyle('fontSize', (e.target as HTMLSelectElement).value)"
+              >
+                <option value="">Default</option>
+                <option v-for="size in FONT_SIZES" :key="size" :value="size">{{ size }}</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group" v-if="'alignment' in selectedComponent.props">
+            <label>Alignment</label>
+            <div class="segmented-control">
+              <button
+                v-for="align in ['left', 'center', 'right']"
+                :key="align"
+                class="segment-btn"
+                :class="{ active: selectedComponent.styles?.textAlign === align || (!selectedComponent.styles?.textAlign && selectedComponent.props.alignment === align) }"
+                @click="updateStyle('textAlign', align)"
+              >
+                <svg v-if="align === 'left'" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="17" y1="10" x2="3" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="17" y1="18" x2="3" y2="18"/></svg>
+                <svg v-if="align === 'center'" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="10" x2="6" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="18" y1="18" x2="6" y2="18"/></svg>
+                <svg v-if="align === 'right'" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="21" y1="10" x2="7" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="21" y1="18" x2="7" y2="18"/></svg>
+              </button>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Color</label>
+            <div class="color-picker-wrapper">
+              <input
+                type="color"
+                class="color-input"
+                :value="selectedComponent.styles?.color || selectedComponent.props.color || '#171717'"
+                @input="e => updateStyle('color', (e.target as HTMLInputElement).value)"
+              />
+              <span class="color-value">{{ selectedComponent.styles?.color || selectedComponent.props.color || '#171717' }}</span>
+            </div>
+          </div>
+
         </div>
 
       </div>
     </div>
   </div>
 </template>
+
+<style scoped>
+.property-panel {
+  width: var(--panel-width);
+  background: var(--color-surface);
+  border-left: 1px solid var(--color-border);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  z-index: var(--z-panel);
+}
+
+.panel-header {
+  padding: var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.panel-header h2 {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
+.type-badge {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  background: var(--color-surface-alt);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-secondary);
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+}
+
+.panel-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0;
+}
+
+/* ---- Empty State ---- */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-8) var(--space-6);
+  color: var(--color-text-tertiary);
+  text-align: center;
+  height: 100%;
+}
+
+.empty-state svg {
+  margin-bottom: var(--space-3);
+  opacity: 0.5;
+}
+
+.empty-state p {
+  font-size: 13px;
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* ---- Properties List ---- */
+.properties-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.property-section {
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.property-section h3 {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--color-text-tertiary);
+  margin: 0;
+}
+
+.section-divider {
+  height: 1px;
+  background: var(--color-border-light);
+}
+
+/* ---- Form Controls ---- */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.grid-2-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
+}
+
+.form-group label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+}
+
+.input-control {
+  width: 100%;
+  font-family: var(--font-ui);
+  font-size: 13px;
+  color: var(--color-text-primary);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 6px 8px;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.input-control:focus {
+  outline: none;
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 1px var(--color-accent);
+}
+
+textarea.input-control {
+  resize: vertical;
+  min-height: 60px;
+}
+
+/* ---- Segmented Control ---- */
+.segmented-control {
+  display: flex;
+  background: var(--color-surface-alt);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 2px;
+}
+
+.segment-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--color-text-tertiary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.segment-btn:hover {
+  color: var(--color-text-secondary);
+}
+
+.segment-btn.active {
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  box-shadow: var(--shadow-xs);
+}
+
+/* ---- Color Picker ---- */
+.color-picker-wrapper {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.color-input {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  background: none;
+}
+
+.color-input::-webkit-color-swatch-wrapper {
+  padding: 2px;
+}
+
+.color-input::-webkit-color-swatch {
+  border: none;
+  border-radius: 2px;
+}
+
+.color-value {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+}
+</style>

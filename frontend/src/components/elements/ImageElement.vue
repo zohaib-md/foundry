@@ -1,16 +1,35 @@
 <script setup lang="ts">
-import type { ImageProps } from '../../types/builder';
+import { computed } from 'vue';
+import type { ImageProps, ComponentStyles } from '../../types/builder';
 
-const props = defineProps<{ props: ImageProps }>();
+const props = defineProps<{
+  props: ImageProps;
+  styles?: ComponentStyles;
+}>();
+
+const wrapperStyles = computed(() => {
+  return {
+    textAlign: props.styles?.textAlign || props.props.alignment,
+  };
+});
 </script>
 
 <template>
-  <div :style="{ textAlign: props.props.alignment }">
+  <div :style="wrapperStyles">
     <img
       :src="props.props.url"
       :alt="props.props.altText"
-      :style="{ width: props.props.width, maxWidth: '100%' }"
-      class="inline-block object-cover"
+      :style="{ width: props.props.width }"
+      class="foundry-img"
     />
   </div>
 </template>
+
+<style scoped>
+.foundry-img {
+  display: inline-block;
+  max-width: 100%;
+  object-fit: cover;
+  border-radius: var(--radius-md);
+}
+</style>
