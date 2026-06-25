@@ -9,6 +9,7 @@ const emit = defineEmits<{
 }>();
 
 const blocks: { type: ComponentType; label: string; icon: string }[] = [
+  { type: 'container', label: 'Layout Box', icon: 'M4 4h16v16H4zM4 12h16' },
   { type: 'heading', label: 'Heading', icon: 'M4 6h16M4 12h16M4 18h7' },
   { type: 'text', label: 'Text', icon: 'M4 6h16M4 12h16M4 18h16' },
   { type: 'button', label: 'Button', icon: 'M4 5a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5zm4 6h8' },

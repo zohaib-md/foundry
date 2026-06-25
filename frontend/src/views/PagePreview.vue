@@ -2,21 +2,11 @@
 import { ref, onMounted } from 'vue';
 import axios from 'axios';
 import type { BuilderComponent } from '../types/builder';
-import HeadingElement from '../components/elements/HeadingElement.vue';
-import TextElement from '../components/elements/TextElement.vue';
-import ButtonElement from '../components/elements/ButtonElement.vue';
-import ImageElement from '../components/elements/ImageElement.vue';
+import PreviewComponent from '../components/builder/PreviewComponent.vue';
 
 const components = ref<BuilderComponent[]>([]);
 const title = ref<string>('Loading...');
 const error = ref<string | null>(null);
-
-const componentMap = {
-  heading: HeadingElement,
-  text: TextElement,
-  button: ButtonElement,
-  image: ImageElement,
-};
 
 onMounted(async () => {
   try {
@@ -66,12 +56,10 @@ onMounted(async () => {
       </div>
       
       <div v-else class="preview-content">
-        <component
+        <PreviewComponent
           v-for="comp in components"
           :key="comp.id"
-          :is="componentMap[comp.type]"
-          :props="comp.props"
-          :styles="comp.styles"
+          :component="comp"
         />
       </div>
     </div>

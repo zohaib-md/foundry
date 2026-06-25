@@ -3,12 +3,14 @@ import { ref } from 'vue';
 import BuilderSidebar from './BuilderSidebar.vue';
 import BuilderCanvas from './BuilderCanvas.vue';
 import PropertyEditor from './PropertyEditor.vue';
+import ExportModal from './ExportModal.vue';
 import { useBuilderStore } from '../../stores/useBuilderStore';
 import type { DeviceMode } from '../../types/builder';
 
 const store = useBuilderStore();
 const deviceMode = ref<DeviceMode>('desktop');
 const showSaveToast = ref(false);
+const showExportModal = ref(false);
 
 const emit = defineEmits<{
   (e: 'save'): void;
@@ -70,6 +72,12 @@ const handleSave = () => {
       </div>
 
       <div class="header-right">
+        <button class="export-link" @click="showExportModal = true">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline>
+          </svg>
+          Export Code
+        </button>
         <router-link to="/preview" class="preview-link">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
             <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" />
@@ -97,10 +105,20 @@ const handleSave = () => {
 
     <!-- Main Workspace -->
     <div class="foundry-workspace">
-      <BuilderSidebar @add="(type) => store.addComponent(type)" />
+      <BuilderSidebar @add="(type) => {
+        const parentId = store.selectedComponent?.type === 'container' ? store.selectedComponentId : undefined;
+        store.addComponent(type, undefined, parentId ?? undefined);
+      }" />
       <BuilderCanvas :device-mode="deviceMode" />
       <PropertyEditor />
     </div>
+
+    <!-- Export Modal -->
+    <ExportModal 
+      v-if="showExportModal" 
+      :components="store.components" 
+      @close="showExportModal = false" 
+    />
 
   </div>
 </template>
@@ -196,7 +214,7 @@ const handleSave = () => {
   gap: var(--space-2);
 }
 
-.preview-link {
+.preview-link, .export-link {
   display: flex;
   align-items: center;
   gap: var(--space-1);
@@ -204,12 +222,15 @@ const handleSave = () => {
   font-size: 13px;
   font-weight: 500;
   color: var(--color-text-secondary);
+  background: transparent;
+  border: none;
+  cursor: pointer;
   text-decoration: none;
   border-radius: var(--radius-md);
   transition: all var(--transition-fast);
 }
 
-.preview-link:hover {
+.preview-link:hover, .export-link:hover {
   color: var(--color-text-primary);
   background: var(--color-overlay);
 }

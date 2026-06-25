@@ -1,12 +1,23 @@
-export type ComponentType = 'heading' | 'text' | 'button' | 'image';
+export type ComponentType = 'heading' | 'text' | 'button' | 'image' | 'container';
 
 // ---- Typography Styles ----
 export interface ComponentStyles {
   fontFamily?: string;
   fontSize?: string;
   fontWeight?: string;
+  width?: string;
+  minHeight?: string;
   color?: string;
   textAlign?: 'left' | 'center' | 'right';
+  // Layout specific styles
+  display?: 'flex' | 'grid' | 'block';
+  flexDirection?: 'row' | 'column';
+  alignItems?: 'flex-start' | 'center' | 'flex-end' | 'stretch';
+  justifyContent?: 'flex-start' | 'center' | 'flex-end' | 'space-between' | 'space-around';
+  gap?: string;
+  padding?: string;
+  backgroundColor?: string;
+  borderRadius?: string;
 }
 
 // ---- Component Props ----
@@ -37,12 +48,18 @@ export interface ImageProps {
   alignment: 'left' | 'center' | 'right';
 }
 
+export interface ContainerProps {
+  // Empty for now, keeping actual flex logic in styles
+  preset?: 'row' | 'column' | 'grid';
+}
+
 // ---- Builder Component (core data model) ----
 export interface BuilderComponent {
   id: string;
   type: ComponentType;
   props: any;
   styles?: ComponentStyles;
+  children?: BuilderComponent[];
 }
 
 // ---- Device Modes ----

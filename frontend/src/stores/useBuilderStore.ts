@@ -8,19 +8,51 @@ export const useBuilderStore = defineStore('builder', () => {
   const components = ref<BuilderComponent[]>([]);
   const selectedComponentId = ref<string | null>(null);
 
+  // ---- Helpers ----
+  const findComponentById = (id: string, list: BuilderComponent[]): BuilderComponent | null => {
+    for (const comp of list) {
+      if (comp.id === id) return comp;
+      if (comp.children) {
+        const found = findComponentById(id, comp.children);
+        if (found) return found;
+      }
+    }
+    return null;
+  };
+
+  const removeComponentById = (id: string, list: BuilderComponent[]): boolean => {
+    for (let i = 0; i < list.length; i++) {
+      if (list[i].id === id) {
+        list.splice(i, 1);
+        return true;
+      }
+      if (list[i].children) {
+        const removed = removeComponentById(id, list[i].children!);
+        if (removed) return true;
+      }
+    }
+    return false;
+  };
+
   // ---- Computed ----
 
   const selectedComponent = computed(() =>
-    components.value.find(c => c.id === selectedComponentId.value) ?? null
+    selectedComponentId.value ? findComponentById(selectedComponentId.value, components.value) : null
   );
 
   const usedFonts = computed(() => {
     const fonts = new Set<string>();
-    components.value.forEach(c => {
-      if (c.styles?.fontFamily) {
-        fonts.add(c.styles.fontFamily);
-      }
-    });
+    const scanFonts = (list: BuilderComponent[]) => {
+      list.forEach(c => {
+        if (c.styles?.fontFamily) {
+          fonts.add(c.styles.fontFamily);
+        }
+        if (c.children) {
+          scanFonts(c.children);
+        }
+      });
+    };
+    scanFonts(components.value);
     return fonts;
   });
 
@@ -36,6 +68,8 @@ export const useBuilderStore = defineStore('builder', () => {
         return { text: 'Get Started', url: '#', variant: 'primary', alignment: 'left' };
       case 'image':
         return { url: 'https://placehold.co/800x400/F5F5F5/A3A3A3?text=Image', altText: 'Placeholder Image', width: '100%', alignment: 'center' };
+      case 'container':
+        return { preset: 'col' };
       default:
         return {};
     }
@@ -43,18 +77,40 @@ export const useBuilderStore = defineStore('builder', () => {
 
   // ---- Actions ----
 
-  const addComponent = (type: ComponentType, index?: number) => {
+  const addComponent = (type: ComponentType, index?: number, parentId?: string) => {
     const newComponent: BuilderComponent = {
       id: generateId(),
       type,
       props: getDefaultProps(type),
-      styles: {},
+      styles: type === 'container' ? {
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '16px',
+        padding: '24px',
+        backgroundColor: '#ffffff',
+        borderRadius: '8px'
+      } : {},
     };
 
-    if (index !== undefined) {
-      components.value.splice(index, 0, newComponent);
+    if (type === 'container') {
+      newComponent.children = [];
+    }
+
+    if (parentId) {
+      const parent = findComponentById(parentId, components.value);
+      if (parent && parent.type === 'container' && parent.children) {
+        if (index !== undefined) {
+          parent.children.splice(index, 0, newComponent);
+        } else {
+          parent.children.push(newComponent);
+        }
+      }
     } else {
-      components.value.push(newComponent);
+      if (index !== undefined) {
+        components.value.splice(index, 0, newComponent);
+      } else {
+        components.value.push(newComponent);
+      }
     }
 
     selectedComponentId.value = newComponent.id;
@@ -65,21 +121,21 @@ export const useBuilderStore = defineStore('builder', () => {
   };
 
   const updateComponentProps = (id: string, newProps: any) => {
-    const component = components.value.find(c => c.id === id);
+    const component = findComponentById(id, components.value);
     if (component) {
       component.props = { ...component.props, ...newProps };
     }
   };
 
   const updateComponentStyles = (id: string, newStyles: Partial<ComponentStyles>) => {
-    const component = components.value.find(c => c.id === id);
+    const component = findComponentById(id, components.value);
     if (component) {
       component.styles = { ...component.styles, ...newStyles };
     }
   };
 
   const removeComponent = (id: string) => {
-    components.value = components.value.filter(c => c.id !== id);
+    removeComponentById(id, components.value);
     if (selectedComponentId.value === id) {
       selectedComponentId.value = null;
     }

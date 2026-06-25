@@ -42,9 +42,7 @@ const canvasWidth = computed(() => {
           <template #item="{ element }">
             <CanvasComponent
               :component="element"
-              :is-selected="store.selectedComponentId === element.id"
-              @select="store.selectComponent(element.id)"
-              @remove="store.removeComponent(element.id)"
+              :parent-id="null"
             />
           </template>
           
