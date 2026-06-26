@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\AiController;
+use App\Http\Controllers\UploadController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -11,3 +12,4 @@ Route::get('/user', function (Request $request) {
 
 Route::apiResource('pages', PageController::class)->except(['destroy']);
 Route::post('/ai/generate', [AiController::class, 'generate']);
+Route::post('/upload', [UploadController::class, 'store']);
