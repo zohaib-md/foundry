@@ -20,6 +20,7 @@ const emit = defineEmits<{
 }>();
 
 const handleSave = () => {
+  store.markSaved();
   emit('save');
   showSaveToast.value = true;
   setTimeout(() => { showSaveToast.value = false; }, 2400);
@@ -69,9 +70,62 @@ onMounted(() => {
   document.documentElement.setAttribute('data-theme', 'light');
 });
 
-const toggleTheme = () => {
-  isDarkMode.value = !isDarkMode.value;
-  document.documentElement.setAttribute('data-theme', isDarkMode.value ? 'dark' : 'light');
+const toggleTheme = (event: MouseEvent) => {
+  const willBeDark = !isDarkMode.value;
+
+  // Fallback for browsers that don't support View Transitions API
+  if (!document.startViewTransition) {
+    isDarkMode.value = willBeDark;
+    document.documentElement.setAttribute('data-theme', willBeDark ? 'dark' : 'light');
+    return;
+  }
+
+  // Get the click position, or default to bottom-left (0, window.innerHeight)
+  const x = event?.clientX ?? 0;
+  const y = event?.clientY ?? window.innerHeight;
+  // Sweep from bottom-left (0, innerHeight) to top-right
+  const sweepX = 0;
+  const sweepY = window.innerHeight;
+  
+  const endRadius = Math.hypot(
+    Math.max(sweepX, window.innerWidth - sweepX),
+    Math.max(sweepY, window.innerHeight - sweepY)
+  );
+
+  const transition = document.startViewTransition(() => {
+    isDarkMode.value = willBeDark;
+    document.documentElement.setAttribute('data-theme', willBeDark ? 'dark' : 'light');
+    // Set a class to help CSS know the direction of transition
+    if (willBeDark) {
+      document.documentElement.classList.add('transitioning-to-dark');
+      document.documentElement.classList.remove('transitioning-to-light');
+    } else {
+      document.documentElement.classList.add('transitioning-to-light');
+      document.documentElement.classList.remove('transitioning-to-dark');
+    }
+  });
+
+  transition.ready.then(() => {
+    const clipPath = [
+      `circle(0px at ${sweepX}px ${sweepY}px)`,
+      `circle(${endRadius}px at ${sweepX}px ${sweepY}px)`
+    ];
+
+    document.documentElement.animate(
+      {
+        clipPath: willBeDark ? clipPath : [...clipPath].reverse()
+      },
+      {
+        duration: 800,
+        easing: 'cubic-bezier(0.25, 1, 0.5, 1)',
+        pseudoElement: willBeDark ? '::view-transition-new(root)' : '::view-transition-old(root)'
+      }
+    );
+  });
+
+  transition.finished.then(() => {
+    document.documentElement.classList.remove('transitioning-to-dark', 'transitioning-to-light');
+  });
 };
 
 onUnmounted(() => {
@@ -85,12 +139,14 @@ onUnmounted(() => {
     <!-- Top Bar -->
     <header class="foundry-header">
       <div class="header-left">
-        <div class="foundry-logo">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" /><rect x="3" y="14" width="7" height="7" /><rect x="14" y="14" width="7" height="7" />
-          </svg>
-        </div>
-        <span class="foundry-wordmark">Foundry</span>
+        <router-link to="/" class="brand-link">
+          <div class="foundry-logo">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" /><rect x="3" y="14" width="7" height="7" /><rect x="14" y="14" width="7" height="7" />
+            </svg>
+          </div>
+          <span class="foundry-wordmark">Foundry</span>
+        </router-link>
         
         <div class="history-controls">
           <button 
@@ -151,13 +207,17 @@ onUnmounted(() => {
       </div>
 
       <div class="header-right">
-        <button class="theme-toggle" @click="toggleTheme" :title="isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'">
-          <svg v-if="isDarkMode" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
-          </svg>
-          <svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
-          </svg>
+        <button class="premium-theme-toggle" :class="isDarkMode ? 'dark-mode' : 'light-mode'" @click="toggleTheme" :title="isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'">
+          <span class="toggle-text left-text">DARK<br>MODE</span>
+          <span class="toggle-text right-text">LIGHT<br>MODE</span>
+          <div class="toggle-thumb">
+            <svg v-if="!isDarkMode" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+            </svg>
+            <svg v-else width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+            </svg>
+          </div>
         </button>
         <button class="export-link" @click="showExportModal = true">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
@@ -171,7 +231,7 @@ onUnmounted(() => {
           </svg>
           Preview
         </router-link>
-        <button class="save-btn" @click="handleSave">
+        <button class="save-btn" :disabled="!store.isDirty" @click="handleSave" :title="store.isDirty ? 'Save changes' : 'No changes to save'">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
             <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" /><polyline points="17,21 17,13 7,13 7,21" /><polyline points="7,3 7,8 15,8" />
           </svg>
@@ -211,6 +271,31 @@ onUnmounted(() => {
   </div>
 </template>
 
+<style>
+/* View Transition API Overrides */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+/* When going to Dark mode, the NEW state sweeps OVER the old state */
+html.transitioning-to-dark::view-transition-old(root) {
+  z-index: 1;
+}
+html.transitioning-to-dark::view-transition-new(root) {
+  z-index: 2;
+}
+
+/* When going to Light mode, the OLD state shrinks AWAY to reveal the new state underneath */
+html.transitioning-to-light::view-transition-old(root) {
+  z-index: 2;
+}
+html.transitioning-to-light::view-transition-new(root) {
+  z-index: 1;
+}
+</style>
+
 <style scoped>
 .foundry-layout {
   height: 100vh;
@@ -239,6 +324,19 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   gap: var(--space-3);
+}
+
+.brand-link {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  text-decoration: none;
+  cursor: pointer;
+  transition: opacity var(--transition-fast);
+}
+
+.brand-link:hover {
+  opacity: 0.8;
 }
 
 .foundry-logo {
@@ -335,23 +433,89 @@ onUnmounted(() => {
   gap: var(--space-2);
 }
 
-.theme-toggle {
+.premium-theme-toggle {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 90px;
+  height: 36px;
+  border-radius: 20px;
+  border: none;
+  cursor: pointer;
+  outline: none;
+  font-family: var(--font-ui);
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow: hidden;
+  padding: 0;
+}
+
+/* Light Mode Neumorphism */
+.premium-theme-toggle.light-mode {
+  background: #E8ECEF;
+  box-shadow: inset 2px 2px 5px rgba(0,0,0,0.1), inset -2px -2px 5px rgba(255,255,255,0.7);
+}
+
+/* Dark Mode Neumorphism */
+.premium-theme-toggle.dark-mode {
+  background: #232732;
+  box-shadow: inset 3px 3px 6px rgba(0,0,0,0.4), inset -2px -2px 5px rgba(255,255,255,0.05);
+}
+
+.toggle-text {
+  position: absolute;
+  font-size: 8px;
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: 0.5px;
+  transition: all 0.4s ease;
+  z-index: 1;
+  user-select: none;
+  text-align: left;
+}
+
+.left-text {
+  left: 12px;
+}
+.right-text {
+  right: 12px;
+}
+
+.premium-theme-toggle.light-mode .toggle-text { color: #9CA3AF; }
+.premium-theme-toggle.dark-mode .toggle-text { color: #6B7280; }
+
+.premium-theme-toggle.light-mode .left-text { opacity: 0; transform: translateX(-10px); }
+.premium-theme-toggle.light-mode .right-text { opacity: 1; transform: translateX(0); }
+
+.premium-theme-toggle.dark-mode .left-text { opacity: 1; transform: translateX(0); }
+.premium-theme-toggle.dark-mode .right-text { opacity: 0; transform: translateX(10px); }
+
+/* Thumb */
+.toggle-thumb {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
-  background: transparent;
-  border: none;
-  border-radius: var(--radius-md);
-  color: var(--color-text-secondary);
-  cursor: pointer;
-  transition: all var(--transition-fast);
+  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.4s, box-shadow 0.4s;
+  z-index: 2;
 }
 
-.theme-toggle:hover {
-  color: var(--color-text-primary);
-  background: var(--color-overlay);
+.premium-theme-toggle.light-mode .toggle-thumb {
+  background: #F3F4F6;
+  box-shadow: 2px 2px 4px rgba(0,0,0,0.15), -1px -1px 3px rgba(255,255,255,0.8);
+  color: #9CA3AF;
+  transform: translateX(0);
+}
+
+.premium-theme-toggle.dark-mode .toggle-thumb {
+  background: #374151;
+  box-shadow: 2px 2px 5px rgba(0,0,0,0.3), -1px -1px 3px rgba(255,255,255,0.1);
+  color: #9CA3AF;
+  transform: translateX(54px);
 }
 
 .preview-link, .export-link {
@@ -392,8 +556,14 @@ onUnmounted(() => {
   box-shadow: var(--shadow-xs);
 }
 
-.save-btn:hover {
+.save-btn:hover:not(:disabled) {
   background: var(--color-accent-hover);
+}
+
+.save-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  box-shadow: none;
 }
 
 /* ---- Toast ---- */

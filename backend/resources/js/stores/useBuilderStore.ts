@@ -22,9 +22,19 @@ export const useBuilderStore = defineStore('builder', () => {
     }
   }
 
-  // Persist to localStorage automatically
+  const lastSavedSnapshot = ref<string>(JSON.stringify(components.value));
+  const isDirty = ref(false);
+
+  const markSaved = () => {
+    lastSavedSnapshot.value = JSON.stringify(components.value);
+    isDirty.value = false;
+  };
+
+  // Persist to localStorage automatically and update dirty state
   watch(components, (newVal) => {
+    const serialized = JSON.stringify(newVal);
     localStorage.setItem('foundry_builder_state', JSON.stringify({ components: newVal }));
+    isDirty.value = serialized !== lastSavedSnapshot.value;
   }, { deep: true });
 
   // ---- History State ----
@@ -412,5 +422,9 @@ export const useBuilderStore = defineStore('builder', () => {
     addTemplate,
     addTemplateFromRegistry,
     clearAll,
+    
+    // Dirty state
+    isDirty,
+    markSaved
   };
 });
