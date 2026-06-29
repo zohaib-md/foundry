@@ -1,34 +1,41 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
+import { useRoute } from 'vue-router';
 import axios from 'axios';
 import type { BuilderComponent } from '../types/builder';
 import PreviewComponent from '../components/builder/PreviewComponent.vue';
+import { useBuilderStore } from '../stores/useBuilderStore';
 
 const components = ref<BuilderComponent[]>([]);
 const title = ref<string>('Loading...');
 const error = ref<string | null>(null);
+const isIndependentLink = ref<boolean>(false);
+
+const route = useRoute();
+const store = useBuilderStore();
 
 onMounted(async () => {
-  try {
-    const res = await axios.get('/api/pages');
-    const pages = res.data.data;
-    
-    if (pages && pages.length > 0) {
-      const latestPage = pages.sort((a: any, b: any) => 
-        new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
-      )[0];
-      
-      const detailRes = await axios.get(`/api/pages/${latestPage.id}`);
-      components.value = detailRes.data.data.components || [];
-      title.value = detailRes.data.data.title;
-    } else {
-      title.value = 'No pages found';
-      error.value = 'Go to the editor and save a page first!';
+  const slug = route.params.slug as string;
+
+  if (slug) {
+    isIndependentLink.value = true;
+    // Independent shared link mode
+    try {
+      const res = await axios.get(`/api/pages/slug/${slug}`);
+      components.value = res.data.data.components || [];
+      title.value = res.data.data.title;
+    } catch (err) {
+      console.error('Failed to fetch page by slug:', err);
+      title.value = 'Error';
+      error.value = 'Failed to load this preview link. It might be invalid or expired.';
     }
-  } catch (err) {
-    console.error('Failed to fetch page:', err);
-    title.value = 'Error';
-    error.value = 'Failed to load page. Is the Laravel backend running on port 8000?';
+  } else {
+    // Local preview mode (instant, no DB required)
+    components.value = store.components;
+    title.value = 'Local Preview';
+    if (!components.value || components.value.length === 0) {
+      error.value = 'Your canvas is empty! Add some components first.';
+    }
   }
 });
 </script>
@@ -36,7 +43,7 @@ onMounted(async () => {
 <template>
   <div class="preview-layout">
     <!-- Top Bar (Preview Chrome) -->
-    <div class="preview-chrome">
+    <div class="preview-chrome" v-if="!isIndependentLink">
       <div class="chrome-status">
         <span class="status-dot"></span>
         <span>Live Preview: {{ title }}</span>
@@ -50,7 +57,7 @@ onMounted(async () => {
     </div>
 
     <!-- Rendered Page Content -->
-    <div class="preview-surface">
+    <div class="preview-surface" :class="{ 'is-independent': isIndependentLink }">
       <div v-if="error" class="preview-error">
         <p>{{ error }}</p>
       </div>
@@ -120,6 +127,19 @@ onMounted(async () => {
   display: flex;
   justify-content: center;
   padding: var(--space-8);
+  overflow-y: auto;
+  position: relative;
+}
+
+.preview-surface.is-independent {
+  height: 100vh;
+  padding: 0;
+}
+
+.preview-surface.is-independent .preview-content {
+  border-radius: 0;
+  min-height: 100vh;
+  box-shadow: none;
 }
 
 .preview-content {

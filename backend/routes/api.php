@@ -10,6 +10,7 @@ Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
 
+Route::get('/pages/slug/{slug}', [PageController::class, 'showBySlug']);
 Route::apiResource('pages', PageController::class)->except(['destroy']);
 Route::post('/ai/generate', [AiController::class, 'generate']);
 Route::post('/upload', [UploadController::class, 'store']);

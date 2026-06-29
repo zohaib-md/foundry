@@ -22,6 +22,14 @@ class PageController extends Controller
         ]);
     }
 
+    public function showBySlug($slug)
+    {
+        $page = Page::where('slug', $slug)->firstOrFail();
+        return response()->json([
+            'data' => $page
+        ]);
+    }
+
     public function store(Request $request)
     {
         $validated = $request->validate([

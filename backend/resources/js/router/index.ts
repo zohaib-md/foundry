@@ -19,6 +19,11 @@ const router = createRouter({
       path: '/preview',
       name: 'preview',
       component: () => import('../views/PagePreview.vue')
+    },
+    {
+      path: '/p/:slug',
+      name: 'shared-preview',
+      component: () => import('../views/PagePreview.vue')
     }
   ]
 })

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue';
+import axios from 'axios';
 import BuilderCanvas from './BuilderCanvas.vue';
 import InsertPanel from './InsertPanel.vue';
 import PropertyEditor from './PropertyEditor.vue';
@@ -24,6 +25,38 @@ const handleSave = () => {
   emit('save');
   showSaveToast.value = true;
   setTimeout(() => { showSaveToast.value = false; }, 2400);
+};
+
+const isGeneratingPreview = ref(false);
+
+const generatePreviewLink = async (e: Event) => {
+  e.preventDefault();
+  
+  // Open the window immediately to avoid popup blockers
+  const newWin = window.open('about:blank', '_blank');
+  if (!newWin) {
+    alert('Please allow popups to view the preview link.');
+    return;
+  }
+
+  isGeneratingPreview.value = true;
+  try {
+    const res = await axios.post('/api/pages', {
+      title: 'Draft Preview',
+      status: 'draft',
+      components: store.components
+    });
+    
+    const slug = res.data.data.slug;
+    // Redirect the new window to the generated link
+    newWin.location.href = `/p/${slug}`;
+  } catch (err) {
+    console.error('Failed to generate preview:', err);
+    newWin.close();
+    alert('Failed to generate independent preview link.');
+  } finally {
+    isGeneratingPreview.value = false;
+  }
 };
 
 const themeVars = computed(() => {
@@ -225,12 +258,15 @@ onUnmounted(() => {
           </svg>
           Export Code
         </button>
-        <router-link to="/preview" class="preview-link">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <button class="preview-link" @click="generatePreviewLink" :disabled="isGeneratingPreview">
+          <svg v-if="!isGeneratingPreview" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
             <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" />
           </svg>
-          Preview
-        </router-link>
+          <svg v-else class="animate-spin" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="2" x2="12" y2="6"></line><line x1="12" y1="18" x2="12" y2="22"></line><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"></line><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"></line><line x1="2" y1="12" x2="6" y2="12"></line><line x1="22" y1="12" x2="18" y2="12"></line><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"></line><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"></line>
+          </svg>
+          {{ isGeneratingPreview ? 'Generating...' : 'Preview' }}
+        </button>
         <button class="save-btn" :disabled="!store.isDirty" @click="handleSave" :title="store.isDirty ? 'Save changes' : 'No changes to save'">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
             <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" /><polyline points="17,21 17,13 7,13 7,21" /><polyline points="7,3 7,8 15,8" />
@@ -537,6 +573,14 @@ html.transitioning-to-light::view-transition-new(root) {
 .preview-link:hover, .export-link:hover {
   color: var(--color-text-primary);
   background: var(--color-overlay);
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
 .save-btn {
