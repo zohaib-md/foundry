@@ -1,72 +1,62 @@
-<div align="center">
-  
-# 🏗️ Foundry
-**The Next-Generation Visual Page Builder**
+# Foundry
 
 [![Vue.js](https://img.shields.io/badge/Vue.js-35495E?style=for-the-badge&logo=vue.js&logoColor=4FC08D)](https://vuejs.org/)
 [![Laravel](https://img.shields.io/badge/Laravel-FF2D20?style=for-the-badge&logo=laravel&logoColor=white)](https://laravel.com)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
 [![Railway](https://img.shields.io/badge/Railway-0B0D0E?style=for-the-badge&logo=railway&logoColor=white)](https://railway.app/)
 
-*A powerful, proof-of-concept visual page builder inspired by Webflow, Wix Studio, and Shopify.*
-
-</div>
+A robust, proof-of-concept visual page builder engineered for seamless component state management and sophisticated user interface design. Foundry bridges the gap between high-fidelity design surfaces and raw codebase architecture.
 
 ---
 
-## ✨ Overview
+## Overview
 
-Foundry is a lightweight yet incredibly robust drag-and-drop page builder. Built to demonstrate clean architecture, scalable component state management, and clear API boundaries, Foundry bridges the gap between high-fidelity design tools and raw code.
+Foundry provides a deterministic, highly reactive drag-and-drop environment. By strictly separating the frontend rendering engine from the backend persistence layer, it enables dynamic serialization of complex component trees into a relational database. It is inspired by the modular architecture found in modern enterprise platforms like Webflow and Wix Studio.
 
-## 🚀 Key Features
+## Architecture & Features
 
-- **🎨 Pre-Made Templates:** Jumpstart your designs with beautiful, high-converting templates (Portfolio, E-commerce, Photography, Corporate, etc.).
-- **🌗 Premium Neumorphic Theming:** Flawless light and dark mode integration featuring a sweeping dynamic transition effect.
-- **🧱 Dynamic Component Library:** Drag and drop primitive building blocks including Headings, Text, Buttons, Images, and more.
-- **🧠 Intelligent Saving:** Auto-sync your complex JSON component trees to the database with a highly optimized, debounced save system.
-- **🔗 Independent Shareable Previews:** Generate secure, standalone preview URLs to share drafts with clients outside of the editor environment.
-- **🎛️ Context-Aware Property Panel:** Click any component on the canvas to instantly edit its specific properties, styles, and alignments.
+- **Component-Driven State:** Utilizes Pinia for centralized, predictable state mutations across the drag-and-drop canvas.
+- **Dynamic Serialization:** Converts deeply nested Vue component instances into optimized JSON payloads for REST API persistence.
+- **Context-Aware Property Mutators:** A reactive property panel that binds directly to the active component's underlying state array.
+- **Neumorphic UI Engine:** An integrated, seamless light and dark mode engine built entirely on native Tailwind CSS v4 variables.
+- **Independent Preview Generation:** Bypasses the editor wrapper to securely fetch and hydrate raw component state into standalone client-facing views.
+- **Optimized Persistence:** Implements intelligent, debounced API calls to prevent layout-shift and ensure zero-data-loss synchronicity between the client and server.
 
-## 🛠️ Tech Stack
+## Technology Stack
 
-Foundry is engineered as a seamless monolith combining a modern frontend engine with a robust backend API.
+* **Frontend Environment:** Vue 3 (Composition API), Vite, Tailwind CSS v4, Pinia, VueDraggable
+* **Backend API:** Laravel 11, PostgreSQL (Production) / SQLite (Local)
+* **Infrastructure:** Dockerized environments orchestrated via Nixpacks on Railway.
 
-* **Frontend:** Vue 3 (Composition API), Vite, Tailwind CSS v4, Pinia, VueDraggable
-* **Backend:** Laravel 11, PostgreSQL (Production) / SQLite (Local)
-* **Deployment & CI/CD:** Railway (Nixpacks)
+## Development Environment Setup
 
-## 🏎️ Getting Started
-
-### 1. Backend Setup (Laravel)
-Navigate to the backend directory and fire up the server:
+### 1. API Services (Laravel)
+Navigate to the backend directory to initialize the application, map the environment, and execute the schema migrations:
 ```bash
 cd backend
 composer install
 php artisan migrate
 php artisan serve
 ```
-*The API will run on `http://localhost:8000`*
+*The local API will instantiate on `http://localhost:8000`*
 
-### 2. Frontend Setup (Vue)
-Since the frontend is bundled natively inside the Laravel application using Vite, you simply need to install the Node dependencies and run the hot-reloading dev server:
+### 2. Client Build (Vue / Vite)
+The frontend relies on Vite for hot-module replacement (HMR) and optimized asset compilation. Install dependencies and initialize the bundler:
 ```bash
 cd backend
 npm install
 npm run dev
 ```
 
-### 3. Build & Create!
-Open `http://localhost:8000` in your browser. Select a template, drag components onto the canvas, edit their properties, and watch the magic happen. 
+## Production Deployment (Railway)
 
-## 🌍 Production Deployment
+Foundry is structured to support continuous deployment pipelines on cloud-native platforms like Railway.
 
-Foundry is fully configured for continuous deployment on **Railway**.
-- Set the Root Directory to `/backend`
-- Pass the `NIXPACKS_PHP_VERSION=8.4` environment variable.
-- Connect a PostgreSQL database and inject the `DATABASE_URL` via Shared Variables.
-- Laravel will automatically run `php artisan migrate --force` and serve the optimized, compiled application!
-
----
-<div align="center">
-  <i>Engineered with ❤️ for creators, designers, and developers.</i>
-</div>
+**Deployment Configuration:**
+1. **Repository Root:** Override the default build path and set the Root Directory to `/backend`.
+2. **Environment Synchronization:** Inject the following critical environment variables:
+   - `NIXPACKS_PHP_VERSION=8.4` (Aligns the container runtime with the `composer.lock` specifications).
+   - `APP_ENV=production` and `APP_DEBUG=false`.
+   - `LOG_CHANNEL=stderr` (Forcs application logs to stream directly to standard output).
+3. **Database Provisioning:** Attach a PostgreSQL volume and map the connection payload to the `DB_URL` environment variable. 
+4. **Proxy Trust:** The Laravel kernel is pre-configured to trust load balancers (`trustProxies`), eliminating SSL termination/mixed-content failures in cloud environments.
