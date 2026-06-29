@@ -1,16 +1,19 @@
 <script setup lang="ts">
-import { ref } from 'vue';
-import BuilderSidebar from './BuilderSidebar.vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import BuilderCanvas from './BuilderCanvas.vue';
+import InsertPanel from './InsertPanel.vue';
 import PropertyEditor from './PropertyEditor.vue';
 import ExportModal from './ExportModal.vue';
 import { useBuilderStore } from '../../stores/useBuilderStore';
+import { useThemeStore } from '../../stores/useThemeStore';
 import type { DeviceMode } from '../../types/builder';
 
 const store = useBuilderStore();
+const themeStore = useThemeStore();
 const deviceMode = ref<DeviceMode>('desktop');
 const showSaveToast = ref(false);
 const showExportModal = ref(false);
+const isDarkMode = ref(false);
 
 const emit = defineEmits<{
   (e: 'save'): void;
@@ -21,10 +24,63 @@ const handleSave = () => {
   showSaveToast.value = true;
   setTimeout(() => { showSaveToast.value = false; }, 2400);
 };
+
+const themeVars = computed(() => {
+  const theme = themeStore.activeTheme;
+  return {
+    '--theme-color-primary': theme.colors.primary,
+    '--theme-color-secondary': theme.colors.secondary,
+    '--theme-color-accent': theme.colors.accent,
+    '--theme-color-background': theme.colors.background,
+    '--theme-color-surface': theme.colors.surface,
+    '--theme-color-textPrimary': theme.colors.textPrimary,
+    '--theme-color-textSecondary': theme.colors.textSecondary,
+    '--theme-color-border': theme.colors.border,
+    
+    '--theme-font-heading': `"${theme.typography.headingFont}", var(--font-ui)`,
+    '--theme-font-body': `"${theme.typography.bodyFont}", var(--font-ui)`,
+    '--theme-font-size-base': theme.typography.baseFontSize,
+    
+    '--theme-radius': theme.layout.borderRadius,
+    '--theme-container': theme.layout.containerWidth,
+    '--theme-spacing': theme.layout.spacing,
+  };
+});
+
+const handleKeydown = (e: KeyboardEvent) => {
+  // Check for Cmd/Ctrl + Z
+  if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'z') {
+    if (e.shiftKey) {
+      store.redo();
+    } else {
+      store.undo();
+    }
+    e.preventDefault();
+  }
+  // Check for Cmd/Ctrl + Y
+  else if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'y') {
+    store.redo();
+    e.preventDefault();
+  }
+};
+
+onMounted(() => {
+  window.addEventListener('keydown', handleKeydown);
+  document.documentElement.setAttribute('data-theme', 'light');
+});
+
+const toggleTheme = () => {
+  isDarkMode.value = !isDarkMode.value;
+  document.documentElement.setAttribute('data-theme', isDarkMode.value ? 'dark' : 'light');
+};
+
+onUnmounted(() => {
+  window.removeEventListener('keydown', handleKeydown);
+});
 </script>
 
 <template>
-  <div class="foundry-layout">
+  <div class="foundry-layout" :style="themeVars">
 
     <!-- Top Bar -->
     <header class="foundry-header">
@@ -35,6 +91,29 @@ const handleSave = () => {
           </svg>
         </div>
         <span class="foundry-wordmark">Foundry</span>
+        
+        <div class="history-controls">
+          <button 
+            class="history-btn" 
+            :disabled="store.past.length === 0"
+            @click="store.undo()"
+            title="Undo (Cmd+Z)"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 7v6h6"></path><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"></path>
+            </svg>
+          </button>
+          <button 
+            class="history-btn" 
+            :disabled="store.future.length === 0"
+            @click="store.redo()"
+            title="Redo (Cmd+Shift+Z)"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 7v6h-6"></path><path d="M3 17a9 9 0 0 1 9-9 9 9 0 0 1 6 2.3l3 2.7"></path>
+            </svg>
+          </button>
+        </div>
       </div>
 
       <!-- Device Preview Toggles -->
@@ -72,6 +151,14 @@ const handleSave = () => {
       </div>
 
       <div class="header-right">
+        <button class="theme-toggle" @click="toggleTheme" :title="isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'">
+          <svg v-if="isDarkMode" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+          </svg>
+          <svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+          </svg>
+        </button>
         <button class="export-link" @click="showExportModal = true">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline>
@@ -105,8 +192,9 @@ const handleSave = () => {
 
     <!-- Main Workspace -->
     <div class="foundry-workspace">
-      <BuilderSidebar @add="(type) => {
-        const parentId = store.selectedComponent?.type === 'container' ? store.selectedComponentId : undefined;
+      <InsertPanel @add="(type) => {
+        const isContainerSelected = store.selectedComponent && ['container', 'section', 'columns', 'grid', 'form'].includes(store.selectedComponent.type);
+        const parentId = isContainerSelected ? store.selectedComponentId : undefined;
         store.addComponent(type, undefined, parentId ?? undefined);
       }" />
       <BuilderCanvas :device-mode="deviceMode" />
@@ -135,9 +223,10 @@ const handleSave = () => {
 
 /* ---- Header ---- */
 .foundry-header {
-  height: var(--header-height);
+  height: 52px;
   background: var(--color-surface);
   border-bottom: 1px solid var(--color-border);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.02);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -170,15 +259,47 @@ const handleSave = () => {
   letter-spacing: -0.3px;
 }
 
+/* ---- History Controls ---- */
+.history-controls {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin-left: var(--space-4);
+  padding-left: var(--space-4);
+  border-left: 1px solid var(--color-border);
+}
+
+.history-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.history-btn:hover:not(:disabled) {
+  background: var(--color-surface-alt);
+  color: var(--color-text-primary);
+}
+
+.history-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
 /* ---- Device Toggles ---- */
 .device-toggles {
   display: flex;
   align-items: center;
-  gap: 2px;
-  background: var(--color-surface-alt);
-  border: 1px solid var(--color-border);
+  background: var(--color-overlay);
   border-radius: var(--radius-md);
-  padding: 2px;
+  padding: 3px;
 }
 
 .device-btn {
@@ -204,7 +325,7 @@ const handleSave = () => {
 .device-btn.active {
   background: var(--color-surface);
   color: var(--color-text-primary);
-  box-shadow: var(--shadow-xs);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06);
 }
 
 /* ---- Header Right ---- */
@@ -212,6 +333,25 @@ const handleSave = () => {
   display: flex;
   align-items: center;
   gap: var(--space-2);
+}
+
+.theme-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-md);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.theme-toggle:hover {
+  color: var(--color-text-primary);
+  background: var(--color-overlay);
 }
 
 .preview-link, .export-link {
@@ -244,15 +384,16 @@ const handleSave = () => {
   font-weight: 500;
   font-family: var(--font-ui);
   color: var(--color-text-inverse);
-  background: var(--color-text-primary);
-  border: none;
+  background: var(--color-accent);
+  border: 1px solid transparent;
   border-radius: var(--radius-md);
   cursor: pointer;
   transition: all var(--transition-fast);
+  box-shadow: var(--shadow-xs);
 }
 
 .save-btn:hover {
-  background: #333;
+  background: var(--color-accent-hover);
 }
 
 /* ---- Toast ---- */

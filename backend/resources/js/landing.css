@@ -1,0 +1,111 @@
+/* ============================================
+   Foundry Landing Page Styles (Premium)
+   ============================================ */
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 90px; /* Offset to prevent sticky navbar from covering section titles */
+}
+
+:root {
+  /* Colors */
+  --landing-bg: #0A0A0A;
+  --landing-card: #151515;
+  --landing-primary: #FFFFFF;
+  --landing-primary-hover: #E0E0E0;
+  --landing-secondary: #888888;
+  --landing-border: #222222;
+  --landing-text-main: #FFFFFF;
+  --landing-text-muted: #888888;
+  
+  /* Gradients & Glows */
+  --landing-glow-emerald: rgba(255, 255, 255, 0.05);
+  
+  /* Typography */
+  --font-landing: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-serif: 'Playfair Display', Georgia, Cambria, "Times New Roman", Times, serif;
+  
+  /* Easing */
+  --ease-apple: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Base resets for the landing page body */
+body.landing-page {
+  background-color: var(--landing-bg);
+  color: var(--landing-text-main);
+  font-family: var(--font-landing);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  margin: 0;
+  padding: 0;
+  position: relative;
+}
+
+body.landing-page::before {
+  content: '';
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-image: url('/images/hero-bg.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  opacity: 0.35;
+  z-index: -2;
+  pointer-events: none;
+}
+
+body.landing-page::after {
+  content: '';
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: radial-gradient(circle at 50% 0%, rgba(14, 91, 67, 0.15) 0%, transparent 60%),
+              linear-gradient(to bottom, rgba(10, 10, 10, 0.2) 0%, rgba(10, 10, 10, 1) 100%);
+  z-index: -1;
+  pointer-events: none;
+}
+
+/* Reusable Utilities */
+.landing-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+/* Animations */
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+  100% { transform: translateY(0px); }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+@keyframes float-delayed {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-15px); }
+  100% { transform: translateY(0px); }
+}
+
+.animate-float-delayed {
+  animation: float-delayed 7s ease-in-out 1s infinite;
+}
+
+/* Smooth zoom transition to editor */
+.page-transition-enter-active,
+.page-transition-leave-active {
+  transition: all 0.6s var(--ease-apple);
+}
+
+.page-transition-enter-from {
+  opacity: 0;
+  transform: scale(0.98);
+}
+
+.page-transition-leave-to {
+  opacity: 0;
+  transform: scale(1.05); /* Zoom in */
+}

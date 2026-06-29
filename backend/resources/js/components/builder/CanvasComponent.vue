@@ -7,6 +7,12 @@ import TextElement from '../elements/TextElement.vue';
 import ButtonElement from '../elements/ButtonElement.vue';
 import ImageElement from '../elements/ImageElement.vue';
 import ContainerElement from '../elements/ContainerElement.vue';
+import DividerElement from '../elements/DividerElement.vue';
+import SpacerElement from '../elements/SpacerElement.vue';
+import VideoElement from '../elements/VideoElement.vue';
+import IconElement from '../elements/IconElement.vue';
+import InputElement from '../elements/InputElement.vue';
+import NewsletterElement from '../elements/NewsletterElement.vue';
 
 const props = defineProps<{
   component: BuilderComponent;
@@ -16,6 +22,7 @@ const props = defineProps<{
 const store = useBuilderStore();
 
 const isSelected = computed(() => store.selectedComponentId === props.component.id);
+const isContainerLike = computed(() => ['container', 'section', 'columns', 'grid', 'form'].includes(props.component.type));
 
 const componentMap: Record<string, any> = {
   heading: HeadingElement,
@@ -23,6 +30,16 @@ const componentMap: Record<string, any> = {
   button: ButtonElement,
   image: ImageElement,
   container: ContainerElement,
+  divider: DividerElement,
+  spacer: SpacerElement,
+  video: VideoElement,
+  icon: IconElement,
+  input: InputElement,
+  newsletter: NewsletterElement,
+  section: ContainerElement,
+  columns: ContainerElement,
+  grid: ContainerElement,
+  form: ContainerElement,
 };
 
 const dynamicComponent = computed(() => componentMap[props.component.type]);
@@ -36,12 +53,26 @@ const handleRemove = (e: MouseEvent) => {
   e.stopPropagation();
   store.removeComponent(props.component.id);
 };
+
+import { resolveComponentProps } from '../../utils/shopify/mockContext';
+
+const resolvedProps = computed(() => {
+  return resolveComponentProps(props.component);
+});
+
+const wrapperStyles = computed(() => {
+  let styleStr = '';
+  if (props.component.styles?.paddingTop) styleStr += `padding-top: ${props.component.styles.paddingTop}; `;
+  if (props.component.styles?.paddingBottom) styleStr += `padding-bottom: ${props.component.styles.paddingBottom}; `;
+  if (props.component.styles?.customCss) styleStr += props.component.styles.customCss;
+  return styleStr;
+});
 </script>
 
 <template>
   <div
     class="component-wrapper"
-    :class="{ 'is-selected': isSelected, 'is-container': component.type === 'container' }"
+    :class="{ 'is-selected': isSelected, 'is-container': isContainerLike }"
     @click="handleSelect"
   >
     <!-- Selection Badge -->
@@ -68,12 +99,15 @@ const handleRemove = (e: MouseEvent) => {
       </button>
     </div>
 
-    <div class="component-content" :class="{ 'pointer-events-none': component.type !== 'container' }">
+    <div :class="['canvas-component', { selected: isSelected }]" @click.stop="handleSelect" :style="wrapperStyles">
+      
+      <!-- The Actual Element -->
       <component
         :is="dynamicComponent"
-        :props="component.props"
+        :props="resolvedProps"
         :styles="component.styles"
         :component-id="component.id"
+        :component-type="component.type"
       />
     </div>
   </div>

@@ -3,34 +3,47 @@
    Single source of truth for the visual language.
    ============================================ */
 
+/* ---- Default Light Theme ---- */
 :root {
   /* ---- Colors: Surfaces ---- */
-  --color-bg:          #F5F5F5;
+  --color-bg:          #FAFAFA;
   --color-surface:     #FFFFFF;
-  --color-surface-alt: #FAFAFA;
+  --color-surface-alt: #F3F4F6;
   --color-overlay:     rgba(0, 0, 0, 0.04);
+  --color-input-bg:    #FFFFFF;
+  --color-input-hover: #F9FAFB;
 
   /* ---- Colors: Borders ---- */
-  --color-border:       #E5E5E5;
-  --color-border-light: #F0F0F0;
+  --color-border:       #E5E7EB;
+  --color-border-light: #F3F4F6;
   --color-border-focus: #3B82F6;
+  --color-border-input: #D1D5DB;
 
   /* ---- Colors: Text ---- */
-  --color-text-primary:   #171717;
-  --color-text-secondary: #525252;
-  --color-text-tertiary:  #A3A3A3;
+  --color-text-primary:   #111827;
+  --color-text-secondary: #4B5563;
+  --color-text-tertiary:  #9CA3AF;
   --color-text-inverse:   #FFFFFF;
 
   /* ---- Colors: Accent ---- */
-  --color-accent:         #3B82F6;
-  --color-accent-hover:   #2563EB;
-  --color-accent-subtle:  rgba(59, 130, 246, 0.08);
+  --color-accent:         #2563EB;
+  --color-accent-hover:   #1D4ED8;
+  --color-accent-subtle:  #EFF6FF;
   --color-accent-border:  rgba(59, 130, 246, 0.3);
 
   /* ---- Colors: Semantic ---- */
   --color-danger:       #EF4444;
   --color-danger-hover: #DC2626;
   --color-success:      #22C55E;
+
+  /* ---- Shadows ---- */
+  --shadow-xs:  0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-sm:  0 1px 2px rgba(0, 0, 0, 0.04), 0 1px 3px rgba(0, 0, 0, 0.03);
+  --shadow-md:  0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+  --shadow-lg:  0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.03);
+  --shadow-xl:  0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 10px 10px -5px rgba(0, 0, 0, 0.02);
+  --shadow-page: 0 4px 24px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.03);
+  --shadow-input: 0 1px 2px rgba(0,0,0,0.03) inset;
 
   /* ---- Spacing (8px grid) ---- */
   --space-1:  4px;
@@ -51,13 +64,6 @@
   --radius-xl:   12px;
   --radius-full: 9999px;
 
-  /* ---- Shadows ---- */
-  --shadow-xs:  0 1px 2px rgba(0, 0, 0, 0.04);
-  --shadow-sm:  0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
-  --shadow-md:  0 4px 6px -1px rgba(0, 0, 0, 0.06), 0 2px 4px -2px rgba(0, 0, 0, 0.04);
-  --shadow-lg:  0 10px 15px -3px rgba(0, 0, 0, 0.06), 0 4px 6px -4px rgba(0, 0, 0, 0.04);
-  --shadow-page: 0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.06);
-
   /* ---- Transitions ---- */
   --transition-fast:   120ms ease;
   --transition-normal: 200ms ease;
@@ -76,6 +82,49 @@
 
   /* ---- Layout ---- */
   --header-height: 52px;
-  --sidebar-width: 240px;
+  --sidebar-width: 280px;
   --panel-width:   280px;
+}
+
+/* ---- Dark Theme ---- */
+:root[data-theme="dark"] {
+  /* ---- Colors: Surfaces ---- */
+  --color-bg:          #111827; /* Midnight slate background */
+  --color-surface:     #1F2937; /* Panels and headers */
+  --color-surface-alt: #374151; /* Hover states */
+  --color-overlay:     rgba(255, 255, 255, 0.05);
+  --color-input-bg:    #111827;
+  --color-input-hover: #374151;
+
+  /* ---- Colors: Borders ---- */
+  --color-border:       #374151;
+  --color-border-light: #1F2937;
+  --color-border-focus: #3B82F6;
+  --color-border-input: #4B5563;
+
+  /* ---- Colors: Text ---- */
+  --color-text-primary:   #F4F4F5;
+  --color-text-secondary: #A1A1AA;
+  --color-text-tertiary:  #71717A;
+  --color-text-inverse:   #000000;
+
+  /* ---- Colors: Accent ---- */
+  --color-accent:         #3B82F6;
+  --color-accent-hover:   #60A5FA;
+  --color-accent-subtle:  rgba(59, 130, 246, 0.15);
+  --color-accent-border:  rgba(59, 130, 246, 0.4);
+
+  /* ---- Colors: Semantic ---- */
+  --color-danger:       #EF4444;
+  --color-danger-hover: #F87171;
+  --color-success:      #10B981;
+
+  /* ---- Shadows ---- */
+  --shadow-xs:  0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-sm:  0 1px 2px rgba(0, 0, 0, 0.2), 0 1px 3px rgba(0, 0, 0, 0.15);
+  --shadow-md:  0 4px 6px -1px rgba(0, 0, 0, 0.2), 0 2px 4px -1px rgba(0, 0, 0, 0.15);
+  --shadow-lg:  0 10px 15px -3px rgba(0, 0, 0, 0.2), 0 4px 6px -2px rgba(0, 0, 0, 0.15);
+  --shadow-xl:  0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
+  --shadow-page: 0 4px 24px rgba(0, 0, 0, 0.2), 0 1px 2px rgba(0, 0, 0, 0.15);
+  --shadow-input: 0 1px 2px rgba(0,0,0,0.1) inset;
 }

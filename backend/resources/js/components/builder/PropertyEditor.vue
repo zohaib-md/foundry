@@ -3,8 +3,11 @@ import { computed, ref } from 'vue';
 import axios from 'axios';
 import { useBuilderStore } from '../../stores/useBuilderStore';
 import { FONT_FAMILIES, FONT_SIZES, FONT_WEIGHTS } from '../../types/builder';
+import ThemeEditor from './ThemeEditor.vue';
 
 const store = useBuilderStore();
+
+const activeTab = ref<'element' | 'theme'>('element');
 
 const selectedComponent = computed(() => store.selectedComponent);
 
@@ -18,11 +21,33 @@ const updateProp = (key: string, value: any) => {
   }
 };
 
-const updateStyle = (key: string, value: any) => {
+const updateStyle = (key: string, value: string) => {
   if (store.selectedComponentId) {
     store.updateComponentStyles(store.selectedComponentId, { [key]: value });
   }
 };
+
+const updateBinding = (propName: string, target: string) => {
+  if (store.selectedComponentId) {
+    store.updateComponentBindings(store.selectedComponentId, { [propName]: target || null });
+  }
+};
+
+const getBinding = (propName: string) => {
+  return selectedComponent.value?.bindings?.[propName] || '';
+};
+
+// Available Shopify Dynamic Sources
+const shopifySources = [
+  { label: 'None (Static Value)', value: '' },
+  { label: 'Product Title', value: 'product.title' },
+  { label: 'Product Price', value: 'product.price | money' },
+  { label: 'Product Description', value: 'product.description' },
+  { label: 'Product URL', value: 'product.url' },
+  { label: 'Collection Title', value: 'collection.title' },
+  { label: 'Collection URL', value: 'collection.url' },
+  { label: 'Shop Name', value: 'shop.name' },
+];
 
 const handleAiGenerate = async (presetPrompt?: string) => {
   if (!store.selectedComponentId || !selectedComponent.value) return;
@@ -55,15 +80,37 @@ const handleAiGenerate = async (presetPrompt?: string) => {
 <template>
   <div class="property-panel">
     
-    <div class="panel-header">
+    <div class="panel-tabs">
+      <button 
+        class="tab-btn" 
+        :class="{ active: activeTab === 'element' }" 
+        @click="activeTab = 'element'"
+      >
+        Element
+      </button>
+      <button 
+        class="tab-btn" 
+        :class="{ active: activeTab === 'theme' }" 
+        @click="activeTab = 'theme'"
+      >
+        Theme
+      </button>
+    </div>
+
+    <div class="panel-header" v-if="activeTab === 'element'">
       <h2>Properties</h2>
       <span v-if="selectedComponent" class="type-badge">{{ selectedComponent.type }}</span>
     </div>
 
     <div class="panel-content">
       
-      <!-- Empty State -->
-      <div v-if="!selectedComponent" class="empty-state">
+      <template v-if="activeTab === 'theme'">
+        <ThemeEditor />
+      </template>
+
+      <template v-else>
+        <!-- Empty State -->
+        <div v-if="!selectedComponent" class="empty-state">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
         </svg>
@@ -78,12 +125,13 @@ const handleAiGenerate = async (presetPrompt?: string) => {
 
           <div class="form-group" v-if="'text' in selectedComponent.props">
             <div class="label-row">
-              <label>Text</label>
+              <label>Text <span class="binding-badge" v-if="getBinding('text')">Bound to {{ getBinding('text') }}</span></label>
               <button 
                 class="ai-trigger-btn" 
                 :class="{ 'active': showAiMenu }"
                 @click="showAiMenu = !showAiMenu"
                 title="Generate with AI"
+                v-if="!getBinding('text')"
               >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/><path d="M20 3v4"/><path d="M22 5h-4"/><path d="M4 17v2"/><path d="M5 18H3"/></svg>
                 AI Assist
@@ -91,7 +139,7 @@ const handleAiGenerate = async (presetPrompt?: string) => {
             </div>
 
             <!-- AI Menu Popover -->
-            <div v-if="showAiMenu" class="ai-menu">
+            <div v-if="showAiMenu && !getBinding('text')" class="ai-menu">
               <div class="ai-input-group">
                 <input 
                   type="text" 
@@ -117,7 +165,20 @@ const handleAiGenerate = async (presetPrompt?: string) => {
               </div>
             </div>
 
+            <div class="binding-group">
+              <select 
+                class="input-control binding-select"
+                :value="getBinding('text')"
+                @change="e => updateBinding('text', (e.target as HTMLSelectElement).value)"
+              >
+                <option v-for="source in shopifySources" :key="source.value" :value="source.value">
+                  {{ source.label }}
+                </option>
+              </select>
+            </div>
+
             <textarea
+              v-if="!getBinding('text')"
               class="input-control"
               rows="3"
               :value="selectedComponent.props.text"
@@ -126,8 +187,27 @@ const handleAiGenerate = async (presetPrompt?: string) => {
           </div>
 
           <div class="form-group" v-if="'url' in selectedComponent.props">
-            <label>Link URL</label>
+            <div class="label-row">
+              <label>
+                {{ selectedComponent.type === 'image' || selectedComponent.type === 'video' ? 'Source URL' : 'Link URL' }}
+                <span class="binding-badge" v-if="getBinding('url')">Bound</span>
+              </label>
+            </div>
+            
+            <div class="binding-group">
+              <select 
+                class="input-control binding-select"
+                :value="getBinding('url')"
+                @change="e => updateBinding('url', (e.target as HTMLSelectElement).value)"
+              >
+                <option v-for="source in shopifySources" :key="source.value" :value="source.value">
+                  {{ source.label }}
+                </option>
+              </select>
+            </div>
+            
             <input
+              v-if="!getBinding('url')"
               type="text"
               class="input-control"
               :value="selectedComponent.props.url"
@@ -173,12 +253,118 @@ const handleAiGenerate = async (presetPrompt?: string) => {
               @input="e => updateProp('width', (e.target as HTMLInputElement).value)"
             />
           </div>
+          <div class="form-group" v-if="selectedComponent.type === 'icon'">
+            <label>Icon</label>
+            <select
+              class="input-control"
+              :value="selectedComponent.props.icon"
+              @change="e => updateProp('icon', (e.target as HTMLSelectElement).value)"
+            >
+              <option value="star">Star</option>
+              <option value="heart">Heart</option>
+              <option value="check">Check</option>
+              <option value="arrow">Arrow</option>
+              <option value="zap">Zap</option>
+              <option value="shield">Shield</option>
+              <option value="globe">Globe</option>
+              <option value="mail">Mail</option>
+              <option value="custom">Custom (SVG Path)</option>
+            </select>
+          </div>
+          <div class="form-group" v-if="selectedComponent.type === 'icon' && selectedComponent.props.icon === 'custom'">
+            <label>Custom SVG Path (d)</label>
+            <textarea
+              class="input-control"
+              rows="3"
+              placeholder="e.g. M12 2L2 22h20L12 2z"
+              :value="selectedComponent.props.customPath"
+              @input="e => updateProp('customPath', (e.target as HTMLTextAreaElement).value)"
+            ></textarea>
+          </div>
+          <div class="form-group" v-if="selectedComponent.type === 'icon'">
+            <label>Size</label>
+            <input
+              type="text"
+              class="input-control"
+              placeholder="e.g. 32px"
+              :value="selectedComponent.props.size"
+              @input="e => updateProp('size', (e.target as HTMLInputElement).value)"
+            />
+          </div>
+
+          <div class="form-group" v-if="selectedComponent.type === 'divider'">
+            <label>Style</label>
+            <select
+              class="input-control"
+              :value="selectedComponent.props.style"
+              @change="e => updateProp('style', (e.target as HTMLSelectElement).value)"
+            >
+              <option value="solid">Solid</option>
+              <option value="dashed">Dashed</option>
+              <option value="dotted">Dotted</option>
+            </select>
+          </div>
+          <div class="form-group" v-if="selectedComponent.type === 'divider'">
+            <label>Thickness</label>
+            <input
+              type="text"
+              class="input-control"
+              placeholder="e.g. 1px"
+              :value="selectedComponent.props.thickness"
+              @input="e => updateProp('thickness', (e.target as HTMLInputElement).value)"
+            />
+          </div>
+
+          <div class="form-group" v-if="selectedComponent.type === 'spacer'">
+            <label>Height</label>
+            <input
+              type="text"
+              class="input-control"
+              placeholder="e.g. 40px"
+              :value="selectedComponent.props.height"
+              @input="e => updateProp('height', (e.target as HTMLInputElement).value)"
+            />
+          </div>
+
+          <div class="form-group" v-if="selectedComponent.type === 'input' || selectedComponent.type === 'newsletter'">
+            <label>Placeholder</label>
+            <input
+              type="text"
+              class="input-control"
+              :value="selectedComponent.props.placeholder"
+              @input="e => updateProp('placeholder', (e.target as HTMLInputElement).value)"
+            />
+          </div>
+
+          <div class="form-group" v-if="selectedComponent.type === 'input'">
+            <label>Input Type</label>
+            <select
+              class="input-control"
+              :value="selectedComponent.props.type"
+              @change="e => updateProp('type', (e.target as HTMLSelectElement).value)"
+            >
+              <option value="text">Text</option>
+              <option value="email">Email</option>
+              <option value="password">Password</option>
+              <option value="number">Number</option>
+            </select>
+          </div>
+
+          <div class="form-group" v-if="selectedComponent.type === 'newsletter'">
+            <label>Button Text</label>
+            <input
+              type="text"
+              class="input-control"
+              :value="selectedComponent.props.buttonText"
+              @input="e => updateProp('buttonText', (e.target as HTMLInputElement).value)"
+            />
+          </div>
         </div>
 
         <div class="section-divider"></div>
 
         <!-- SECTION: LAYOUT -->
-        <div class="property-section" v-if="selectedComponent.type === 'container'">
+        <div class="property-section" v-if="['container', 'section', 'columns', 'grid', 'form'].includes(selectedComponent.type)">
           <h3>Layout</h3>
 
           <div class="form-group">
@@ -364,10 +550,30 @@ const handleAiGenerate = async (presetPrompt?: string) => {
               <span class="color-value">{{ selectedComponent.styles?.color || selectedComponent.props.color || '#171717' }}</span>
             </div>
           </div>
+        </div>
 
+        <div class="property-section">
+          <h3>SPACING & CSS</h3>
+          <div class="prop-grid">
+            <div class="form-group" style="display: flex; gap: 8px;">
+              <div style="flex: 1;">
+                <label>Padding Top</label>
+                <input type="text" class="input-control" placeholder="0px" :value="selectedComponent.styles?.paddingTop || ''" @input="e => updateStyle('paddingTop', (e.target as HTMLInputElement).value)" />
+              </div>
+              <div style="flex: 1;">
+                <label>Padding Bottom</label>
+                <input type="text" class="input-control" placeholder="0px" :value="selectedComponent.styles?.paddingBottom || ''" @input="e => updateStyle('paddingBottom', (e.target as HTMLInputElement).value)" />
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Custom CSS (Inline)</label>
+              <textarea class="input-control" style="min-height: 60px; font-family: monospace; font-size: 12px;" placeholder="border: 1px solid red;&#10;opacity: 0.8;" :value="selectedComponent.styles?.customCss || ''" @input="e => updateStyle('customCss', (e.target as HTMLTextAreaElement).value)"></textarea>
+            </div>
+          </div>
         </div>
 
       </div>
+      </template>
     </div>
   </div>
 </template>
@@ -382,6 +588,35 @@ const handleAiGenerate = async (presetPrompt?: string) => {
   flex-direction: column;
   flex-shrink: 0;
   z-index: var(--z-panel);
+}
+
+.panel-tabs {
+  display: flex;
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.tab-btn {
+  flex: 1;
+  padding: 12px 0;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text-tertiary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.tab-btn:hover {
+  color: var(--color-text-secondary);
+  background: var(--color-surface-alt);
+}
+
+.tab-btn.active {
+  color: var(--color-text-primary);
+  border-bottom-color: var(--color-text-primary);
 }
 
 .panel-header {
@@ -486,36 +721,14 @@ const handleAiGenerate = async (presetPrompt?: string) => {
   color: var(--color-text-secondary);
 }
 
-.input-control {
-  width: 100%;
-  font-family: var(--font-ui);
-  font-size: 13px;
-  color: var(--color-text-primary);
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  padding: 6px 8px;
-  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
-}
-
-.input-control:focus {
-  outline: none;
-  border-color: var(--color-accent);
-  box-shadow: 0 0 0 1px var(--color-accent);
-}
-
-textarea.input-control {
-  resize: vertical;
-  min-height: 60px;
-}
+/* Input control styles moved to global style.css */
 
 /* ---- Segmented Control ---- */
 .segmented-control {
   display: flex;
-  background: var(--color-surface-alt);
-  border: 1px solid var(--color-border);
+  background: var(--color-overlay);
   border-radius: var(--radius-md);
-  padding: 2px;
+  padding: 3px;
 }
 
 .segment-btn {
@@ -527,19 +740,19 @@ textarea.input-control {
   background: transparent;
   border: none;
   border-radius: var(--radius-sm);
-  color: var(--color-text-tertiary);
+  color: var(--color-text-secondary);
   cursor: pointer;
   transition: all var(--transition-fast);
 }
 
 .segment-btn:hover {
-  color: var(--color-text-secondary);
+  color: var(--color-text-primary);
 }
 
 .segment-btn.active {
   background: var(--color-surface);
   color: var(--color-text-primary);
-  box-shadow: var(--shadow-xs);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06);
 }
 
 /* ---- Color Picker ---- */
@@ -547,31 +760,42 @@ textarea.input-control {
   display: flex;
   align-items: center;
   gap: var(--space-3);
+  background: var(--color-input-bg);
+  border: 1px solid var(--color-border-input);
+  border-radius: var(--radius-md);
+  padding: 4px 10px;
+  box-shadow: var(--shadow-input);
+  transition: border-color var(--transition-fast);
+}
+
+.color-picker-wrapper:focus-within {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px var(--color-accent-subtle), var(--shadow-input);
 }
 
 .color-input {
-  width: 28px;
-  height: 28px;
+  width: 20px;
+  height: 20px;
   padding: 0;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
+  border: none;
+  border-radius: 4px;
   cursor: pointer;
   background: none;
 }
 
 .color-input::-webkit-color-swatch-wrapper {
-  padding: 2px;
+  padding: 0;
 }
 
 .color-input::-webkit-color-swatch {
-  border: none;
-  border-radius: 2px;
+  border: 1px solid rgba(0,0,0,0.1);
+  border-radius: 4px;
 }
 
 .color-value {
   font-family: var(--font-mono);
-  font-size: 12px;
-  color: var(--color-text-secondary);
+  font-size: 13px;
+  color: var(--color-text-primary);
   text-transform: uppercase;
 }
 
@@ -688,5 +912,30 @@ textarea.input-control {
 
 @keyframes spin {
   to { transform: rotate(360deg); }
+}
+
+.binding-badge {
+  background: var(--color-accent);
+  color: #000;
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 600;
+  margin-left: 8px;
+  display: inline-block;
+}
+
+.binding-group {
+  margin-bottom: var(--space-2);
+}
+
+.binding-select {
+  background: rgba(149, 191, 71, 0.1);
+  border: 1px solid rgba(149, 191, 71, 0.3);
+  color: #a8d951;
+}
+
+.binding-select:focus {
+  border-color: #95bf47;
 }
 </style>

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import type { HeadingProps, ComponentStyles } from '../../types/builder';
+import { useDesignSystem } from '../../composables/useDesignSystem';
 
 const props = defineProps<{
   props: HeadingProps;
@@ -18,12 +19,14 @@ const classMap: Record<string, string> = {
 
 const Tag = computed(() => props.props.level);
 
+const { resolveColor, resolveFont } = useDesignSystem();
+
 const computedStyles = computed(() => {
   return {
     textAlign: props.styles?.textAlign || props.props.alignment,
-    color: props.styles?.color || props.props.color,
-    fontFamily: props.styles?.fontFamily ? `"${props.styles.fontFamily}", var(--font-ui)` : undefined,
-    fontSize: props.styles?.fontSize,
+    color: resolveColor(props.styles?.color || props.props.color),
+    fontFamily: resolveFont(props.styles?.fontFamily),
+    fontSize: props.styles?.fontSize || (props.props.level === 'h1' ? '40px' : props.props.level === 'h2' ? '32px' : '24px'),
     fontWeight: props.styles?.fontWeight,
     lineHeight: props.styles?.fontSize ? '1.2' : undefined,
     marginTop: '0',

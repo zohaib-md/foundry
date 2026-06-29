@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "./design-tokens.css";
+@import "./landing.css";
 
 /* ============================================
    Foundry Base Styles
@@ -26,7 +27,6 @@ body {
   background-color: var(--color-bg);
   color: var(--color-text-primary);
   min-height: 100vh;
-  overflow: hidden;
 }
 
 /* ---- Scrollbar ---- */
@@ -58,6 +58,43 @@ body {
 ::selection {
   background: var(--color-accent-subtle);
   color: var(--color-text-primary);
+}
+
+/* ---- Global Form Controls ---- */
+.input-control {
+  width: 100%;
+  padding: 8px 12px;
+  background: var(--color-input-bg);
+  border: 1px solid var(--color-border-input);
+  border-radius: var(--radius-md);
+  font-family: inherit;
+  font-size: 13px;
+  color: var(--color-text-primary);
+  transition: all var(--transition-fast);
+  box-shadow: var(--shadow-input);
+}
+
+.input-control:hover {
+  border-color: var(--color-border-focus);
+}
+
+.input-control:focus {
+  outline: none;
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px var(--color-accent-subtle), var(--shadow-input);
+}
+
+.input-control::placeholder {
+  color: var(--color-text-tertiary);
+}
+
+select.input-control {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%239CA3AF'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 14px;
+  padding-right: 32px;
 }
 
 /* ---- Utility: Truncate ---- */

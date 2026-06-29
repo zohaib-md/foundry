@@ -30,6 +30,6 @@ const wrapperStyles = computed(() => {
   display: inline-block;
   max-width: 100%;
   object-fit: cover;
-  border-radius: var(--radius-md);
+  border-radius: var(--theme-radius, var(--radius-md));
 }
 </style>

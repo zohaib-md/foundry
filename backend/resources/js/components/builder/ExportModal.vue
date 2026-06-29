@@ -2,6 +2,9 @@
 import { ref, computed } from 'vue';
 import type { BuilderComponent } from '../../types/builder';
 import { generateHtmlCode, generateVueCode } from '../../utils/codeGenerator';
+import { ShopifyExportEngine } from '../../utils/shopify/ShopifyExportEngine';
+
+const shopifyExport = new ShopifyExportEngine();
 
 const props = defineProps<{
   components: BuilderComponent[];
@@ -34,6 +37,19 @@ const handleCopy = async () => {
     console.error('Failed to copy text: ', err);
   }
 };
+
+const isExportingShopify = ref(false);
+const handleShopifyExport = async () => {
+  try {
+    isExportingShopify.value = true;
+    await shopifyExport.exportTheme(props.components, 'Foundry-Shopify-Theme');
+  } catch (err) {
+    console.error('Failed to export theme: ', err);
+    alert('Failed to export Shopify theme. See console for details.');
+  } finally {
+    isExportingShopify.value = false;
+  }
+};
 </script>
 
 <template>
@@ -61,20 +77,28 @@ const handleCopy = async () => {
         </div>
 
         <div class="code-container">
-          <button class="copy-btn" @click="handleCopy" :class="{ success: copySuccess }">
-            <template v-if="!copySuccess">
+          <div class="code-actions">
+            <button class="shopify-btn" @click="handleShopifyExport" :disabled="isExportingShopify">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line>
               </svg>
-              Copy
-            </template>
-            <template v-else>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <polyline points="20 6 9 17 4 12"></polyline>
-              </svg>
-              Copied!
-            </template>
-          </button>
+              {{ isExportingShopify ? 'Generating...' : 'Download Shopify Theme' }}
+            </button>
+            <button class="copy-btn" @click="handleCopy" :class="{ success: copySuccess }">
+              <template v-if="!copySuccess">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                </svg>
+                Copy
+              </template>
+              <template v-else>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+                Copied!
+              </template>
+            </button>
+          </div>
           <pre><code>{{ generatedCode }}</code></pre>
         </div>
       </div>
@@ -190,10 +214,16 @@ const handleCopy = async () => {
   flex-direction: column;
 }
 
-.copy-btn {
+.code-actions {
   position: absolute;
   top: var(--space-3);
   right: var(--space-3);
+  display: flex;
+  gap: var(--space-2);
+  z-index: 10;
+}
+
+.copy-btn, .shopify-btn {
   display: flex;
   align-items: center;
   gap: var(--space-1);
@@ -202,14 +232,29 @@ const handleCopy = async () => {
   border: 1px solid rgba(255, 255, 255, 0.2);
   color: #fff;
   font-size: 12px;
+  font-weight: 500;
   border-radius: var(--radius-md);
   cursor: pointer;
   transition: all var(--transition-fast);
-  z-index: 10;
 }
 
-.copy-btn:hover {
+.copy-btn:hover, .shopify-btn:hover:not(:disabled) {
   background: rgba(255, 255, 255, 0.2);
+}
+
+.shopify-btn {
+  background: rgba(149, 191, 71, 0.2); /* Shopify Green tint */
+  border-color: rgba(149, 191, 71, 0.5);
+  color: #a8d951;
+}
+
+.shopify-btn:hover:not(:disabled) {
+  background: rgba(149, 191, 71, 0.3);
+}
+
+.shopify-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .copy-btn.success {

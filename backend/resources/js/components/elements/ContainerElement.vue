@@ -2,6 +2,7 @@
 import { computed } from 'vue';
 import { useBuilderStore } from '../../stores/useBuilderStore';
 import type { ContainerProps, ComponentStyles } from '../../types/builder';
+import { useDesignSystem } from '../../composables/useDesignSystem';
 // @ts-ignore
 import draggable from 'vuedraggable';
 
@@ -9,6 +10,7 @@ const props = defineProps<{
   props: ContainerProps;
   styles?: ComponentStyles;
   componentId: string;
+  componentType: string;
 }>();
 
 const store = useBuilderStore();
@@ -42,6 +44,8 @@ const findDeep = (list: any[], id: string): any => {
   return null;
 };
 
+const { resolveColor } = useDesignSystem();
+
 const computedStyles = computed(() => {
   return {
     display: props.styles?.display || 'flex',
@@ -50,16 +54,22 @@ const computedStyles = computed(() => {
     justifyContent: props.styles?.justifyContent || 'flex-start',
     gap: props.styles?.gap || '16px',
     padding: props.styles?.padding || '24px',
-    backgroundColor: props.styles?.backgroundColor || 'transparent',
+    backgroundColor: resolveColor(props.styles?.backgroundColor) || 'transparent',
     borderRadius: props.styles?.borderRadius || '0px',
     width: props.styles?.width || '100%',
     minHeight: props.styles?.minHeight || '50px',
   };
 });
+
+const tag = computed(() => {
+  if (props.componentType === 'section') return 'section';
+  if (props.componentType === 'form') return 'form';
+  return 'div';
+});
 </script>
 
 <template>
-  <div :style="computedStyles" class="foundry-container">
+  <component :is="tag" :style="computedStyles" class="foundry-container" @submit.prevent>
     <draggable
       v-model="children"
       group="canvas"
@@ -81,7 +91,7 @@ const computedStyles = computed(() => {
     <div v-if="children.length === 0" class="empty-container-state">
       Drop components here
     </div>
-  </div>
+  </component>
 </template>
 
 <style scoped>

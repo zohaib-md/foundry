@@ -155,7 +155,7 @@ const handleDrop = async (e: DragEvent) => {
   justify-content: center;
   padding: var(--space-8);
   /* Dotted background pattern for a professional workspace feel */
-  background-image: radial-gradient(var(--color-border) 1px, transparent 0);
+  background-image: radial-gradient(rgba(255,255,255,0.06) 1px, transparent 0);
   background-size: 24px 24px;
   position: relative;
 }
@@ -199,7 +199,7 @@ const handleDrop = async (e: DragEvent) => {
 }
 
 .canvas-page {
-  background: var(--color-surface);
+  background: var(--theme-color-background, var(--color-surface));
   min-height: 800px;
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-page);
@@ -231,9 +231,10 @@ const handleDrop = async (e: DragEvent) => {
 .empty-icon {
   color: var(--color-text-tertiary);
   margin-bottom: var(--space-4);
-  background: var(--color-bg);
+  background: var(--color-surface);
   padding: var(--space-4);
   border-radius: var(--radius-full);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.03);
 }
 
 .empty-state h3 {

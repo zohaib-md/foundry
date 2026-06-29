@@ -1,4 +1,4 @@
-export type ComponentType = 'heading' | 'text' | 'button' | 'image' | 'container';
+export type ComponentType = 'heading' | 'text' | 'button' | 'image' | 'container' | 'divider' | 'spacer' | 'section' | 'columns' | 'grid' | 'video' | 'icon' | 'form' | 'input' | 'newsletter';
 
 // ---- Typography Styles ----
 export interface ComponentStyles {
@@ -16,8 +16,11 @@ export interface ComponentStyles {
   justifyContent?: 'flex-start' | 'center' | 'flex-end' | 'space-between' | 'space-around';
   gap?: string;
   padding?: string;
+  paddingTop?: string;
+  paddingBottom?: string;
   backgroundColor?: string;
   borderRadius?: string;
+  customCss?: string;
 }
 
 // ---- Component Props ----
@@ -60,6 +63,7 @@ export interface BuilderComponent {
   props: any;
   styles?: ComponentStyles;
   children?: BuilderComponent[];
+  bindings?: Record<string, string>; // Maps a prop name (e.g. 'text') to a Shopify object (e.g. 'product.title')
 }
 
 // ---- Device Modes ----
@@ -87,3 +91,29 @@ export const FONT_WEIGHTS = [
   { label: 'Semibold', value: '600' },
   { label: 'Bold', value: '700' },
 ] as const;
+
+// ---- Theme Engine ----
+export interface Theme {
+  id: string;
+  name: string;
+  colors: {
+    primary: string;
+    secondary: string;
+    accent: string;
+    background: string;
+    surface: string;
+    textPrimary: string;
+    textSecondary: string;
+    border: string;
+  };
+  typography: {
+    headingFont: string;
+    bodyFont: string;
+    baseFontSize: string;
+  };
+  layout: {
+    borderRadius: string;
+    containerWidth: string;
+    spacing: string;
+  };
+}

@@ -1,11 +1,14 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import type { ButtonProps, ComponentStyles } from '../../types/builder';
+import { useDesignSystem } from '../../composables/useDesignSystem';
 
 const props = defineProps<{
   props: ButtonProps;
   styles?: ComponentStyles;
 }>();
+
+const { resolveColor, resolveFont } = useDesignSystem();
 
 const variantClasses = computed(() => {
   switch (props.props.variant) {
@@ -24,8 +27,8 @@ const wrapperStyles = computed(() => {
 
 const buttonStyles = computed(() => {
   return {
-    color: props.styles?.color,
-    fontFamily: props.styles?.fontFamily ? `"${props.styles.fontFamily}", var(--font-ui)` : undefined,
+    color: resolveColor(props.styles?.color),
+    fontFamily: resolveFont(props.styles?.fontFamily),
     fontSize: props.styles?.fontSize || '14px',
     fontWeight: props.styles?.fontWeight || '500',
   };
@@ -59,32 +62,32 @@ const buttonStyles = computed(() => {
 }
 
 .btn-primary {
-  background: var(--color-text-primary);
-  color: var(--color-text-inverse) !important;
+  background: var(--theme-color-primary, var(--color-text-primary));
+  color: var(--theme-color-background, var(--color-text-inverse)) !important;
 }
 
 .btn-primary:hover {
-  background: #333;
+  opacity: 0.9;
 }
 
 .btn-secondary {
-  background: var(--color-surface-alt);
-  border: 1px solid var(--color-border);
-  color: var(--color-text-primary) !important;
+  background: var(--theme-color-surface, var(--color-surface-alt));
+  border: 1px solid var(--theme-color-border, var(--color-border));
+  color: var(--theme-color-primary, var(--color-text-primary)) !important;
 }
 
 .btn-secondary:hover {
-  background: var(--color-border-light);
+  background: var(--theme-color-background, var(--color-border-light));
 }
 
 .btn-outline {
   background: transparent;
-  border: 1px solid var(--color-text-primary);
-  color: var(--color-text-primary) !important;
+  border: 1px solid var(--theme-color-primary, var(--color-text-primary));
+  color: var(--theme-color-primary, var(--color-text-primary)) !important;
 }
 
 .btn-outline:hover {
-  background: var(--color-text-primary);
-  color: var(--color-text-inverse) !important;
+  background: var(--theme-color-primary, var(--color-text-primary));
+  color: var(--theme-color-background, var(--color-text-inverse)) !important;
 }
 </style>
