@@ -140,7 +140,34 @@ const handleDrop = async (e: DragEvent) => {
             <button @click.stop="store.addTemplate('cta')">Add CTA</button>
           </div>
         </div>
+        
+        <!-- Debug Helper (Visible only if there's a bug with invisible components) -->
+        <div v-else-if="components.length > 0 && (!components[0] || !components[0].type)" class="empty-state" style="background: rgba(255,0,0,0.1);">
+          <h3>Invisible Component Bug!</h3>
+          <p>You have {{ components.length }} components but they might be broken.</p>
+          <button @click="store.components = []" style="padding: 8px 16px; background: red; color: white; border-radius: 4px; border: none; cursor: pointer; margin-top: 10px;">Clear Canvas</button>
+        </div>
       </div>
+
+      <!-- AI Generating Premium Overlay -->
+      <Transition name="fade">
+        <div v-if="store.isAiGenerating" class="ai-generating-overlay">
+          <div class="minimal-panel">
+            <div class="pixel-grid">
+              <div 
+                v-for="i in 9" 
+                :key="i" 
+                class="pixel" 
+                :style="{ animationDelay: `${((i - 1) % 3) * 0.15 + Math.floor((i - 1) / 3) * 0.15}s` }"
+              ></div>
+            </div>
+            <div class="loader-text">
+              <h3>Generating Layout</h3>
+              <p>Please wait</p>
+            </div>
+          </div>
+        </div>
+      </Transition>
     </div>
   </div>
 </template>
@@ -199,7 +226,7 @@ const handleDrop = async (e: DragEvent) => {
 }
 
 .canvas-page {
-  background: var(--theme-color-background, var(--color-surface));
+  background-color: var(--theme-color-background, var(--color-surface));
   min-height: 800px;
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-page);
@@ -220,28 +247,32 @@ const handleDrop = async (e: DragEvent) => {
 /* Empty State */
 .empty-state {
   position: absolute;
-  inset: 0;
+  inset: 2rem;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   pointer-events: none;
+  border: 2px dashed var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface-alt);
+  opacity: 0.8;
 }
 
 .empty-icon {
-  color: var(--color-text-tertiary);
+  color: var(--color-accent);
   margin-bottom: var(--space-4);
   background: var(--color-surface);
   padding: var(--space-4);
   border-radius: var(--radius-full);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+  box-shadow: var(--shadow-sm);
 }
 
 .empty-state h3 {
-  font-size: 18px;
+  font-size: 20px;
   font-weight: 600;
   color: var(--color-text-primary);
-  margin: 0 0 var(--space-1) 0;
+  margin: 0 0 var(--space-2) 0;
 }
 
 .empty-state p {
@@ -282,4 +313,105 @@ const handleDrop = async (e: DragEvent) => {
   opacity: 0.4;
   background: var(--color-accent-subtle);
 }
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.5s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+/* ---- AI Generating Minimal Overlay ---- */
+.ai-generating-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(18, 18, 20, 0.4);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-radius: inherit;
+  overflow: hidden;
+}
+
+.minimal-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 2.5rem 3.5rem;
+  background: rgba(25, 25, 28, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 16px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+}
+
+.pixel-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+
+.pixel {
+  width: 4px;
+  height: 4px;
+  background-color: rgba(255, 255, 255, 0.7);
+  border-radius: 1px;
+  animation: pixelPulse 1.5s infinite ease-in-out;
+}
+
+@keyframes pixelPulse {
+  0%, 100% { opacity: 0.1; transform: scale(0.8); }
+  50% { opacity: 1; transform: scale(1); }
+}
+
+.loader-text {
+  text-align: center;
+  font-family: inherit;
+}
+
+.loader-text h3 {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.8);
+  margin: 0 0 0.4rem 0;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+.loader-text p {
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.35);
+  margin: 0;
+  letter-spacing: 0.05em;
+  text-transform: lowercase;
+}
+
+/* Light mode overrides for overlay */
+html[data-theme="light"] .ai-generating-overlay {
+  background: rgba(255, 255, 255, 0.5);
+}
+
+html[data-theme="light"] .minimal-panel {
+  background: rgba(255, 255, 255, 0.95);
+  border-color: rgba(0, 0, 0, 0.06);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
+}
+
+html[data-theme="light"] .pixel {
+  background-color: rgba(0, 0, 0, 0.6);
+}
+
+html[data-theme="light"] .loader-text h3 {
+  color: rgba(0, 0, 0, 0.7);
+}
+
+html[data-theme="light"] .loader-text p {
+  color: rgba(0, 0, 0, 0.4);
+}
+
 </style>

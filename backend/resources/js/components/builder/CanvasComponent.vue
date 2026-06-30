@@ -73,6 +73,7 @@ const wrapperStyles = computed(() => {
   <div
     class="component-wrapper"
     :class="{ 'is-selected': isSelected, 'is-container': isContainerLike }"
+    :data-type="component.type"
     @click="handleSelect"
   >
     <!-- Selection Badge -->
@@ -128,14 +129,15 @@ const wrapperStyles = computed(() => {
 
 /* Hover state (when not selected) */
 .component-wrapper:not(.is-selected):hover {
-  outline: 1px solid var(--color-border);
-  background-color: var(--color-surface-alt);
+  outline: 1.5px solid rgba(59, 130, 246, 0.4); /* Premium light blue border */
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.05); /* Subtle glow effect */
+  background-color: rgba(59, 130, 246, 0.04); /* Very light blue fill */
 }
 
 /* Selected state */
 .component-wrapper.is-selected {
   outline: 1px solid var(--color-accent);
-  background-color: var(--color-accent-subtle);
+  /* Removed background-color to keep text readable */
   z-index: 2;
 }
 
@@ -232,6 +234,29 @@ const wrapperStyles = computed(() => {
 
 .delete-btn:hover {
   background: var(--color-danger);
-  color: var(--color-text-inverse);
+  color: #fff;
+}
+
+/* Ensure empty containers are always visible */
+.component-wrapper[data-type="container"]:empty,
+.component-wrapper[data-type="section"]:empty,
+.component-wrapper[data-type="columns"]:empty,
+.component-wrapper[data-type="grid"]:empty {
+  min-height: 100px;
+  border: 2px dashed var(--color-border);
+  background-color: rgba(0, 0, 0, 0.02);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.component-wrapper[data-type="container"]:empty::after,
+.component-wrapper[data-type="section"]:empty::after,
+.component-wrapper[data-type="columns"]:empty::after,
+.component-wrapper[data-type="grid"]:empty::after {
+  content: "Empty Container";
+  color: var(--color-text-tertiary);
+  font-size: 12px;
+  font-family: var(--font-ui);
 }
 </style>

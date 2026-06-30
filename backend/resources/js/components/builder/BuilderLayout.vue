@@ -2,6 +2,7 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 import axios from 'axios';
 import BuilderCanvas from './BuilderCanvas.vue';
+import AiPromptBar from './AiPromptBar.vue';
 import InsertPanel from './InsertPanel.vue';
 import PropertyEditor from './PropertyEditor.vue';
 import ExportModal from './ExportModal.vue';
@@ -268,8 +269,8 @@ onUnmounted(() => {
           {{ isGeneratingPreview ? 'Generating...' : 'Preview' }}
         </button>
         <button class="save-btn" :disabled="!store.isDirty" @click="handleSave" :title="store.isDirty ? 'Save changes' : 'No changes to save'">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" /><polyline points="17,21 17,13 7,13 7,21" /><polyline points="7,3 7,8 15,8" />
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
           </svg>
           Save
         </button>
@@ -293,7 +294,10 @@ onUnmounted(() => {
         const parentId = isContainerSelected ? store.selectedComponentId : undefined;
         store.addComponent(type, undefined, parentId ?? undefined);
       }" />
-      <BuilderCanvas :device-mode="deviceMode" />
+      <div style="flex: 1; display: flex; flex-direction: column; overflow: hidden;">
+        <AiPromptBar />
+        <BuilderCanvas :device-mode="deviceMode" />
+      </div>
       <PropertyEditor />
     </div>
 
@@ -586,28 +590,49 @@ html.transitioning-to-light::view-transition-new(root) {
 .save-btn {
   display: flex;
   align-items: center;
-  gap: var(--space-1);
-  padding: 6px 14px;
-  font-size: 13px;
-  font-weight: 500;
-  font-family: var(--font-ui);
-  color: var(--color-text-inverse);
-  background: var(--color-accent);
-  border: 1px solid transparent;
-  border-radius: var(--radius-md);
+  gap: 8px;
+  padding: 10px 24px;
+  font-size: 15px;
+  font-weight: 600;
+  font-family: inherit;
+  color: #fff;
+  background: #000;
+  border: 2px solid #fff;
+  border-radius: 9999px; /* Pill shape */
   cursor: pointer;
-  transition: all var(--transition-fast);
-  box-shadow: var(--shadow-xs);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 4px 4px 0px 0px #fff; /* Solid white shadow */
+  margin-right: 4px; /* Give room for shadow */
 }
 
 .save-btn:hover:not(:disabled) {
-  background: var(--color-accent-hover);
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0px 0px #fff;
+}
+
+.save-btn:active:not(:disabled) {
+  transform: translate(4px, 4px);
+  box-shadow: 0px 0px 0px 0px #fff;
 }
 
 .save-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
-  box-shadow: none;
+}
+
+html[data-theme="light"] .save-btn {
+  color: #000;
+  background: #fff;
+  border-color: #000;
+  box-shadow: 4px 4px 0px 0px #000;
+}
+
+html[data-theme="light"] .save-btn:hover:not(:disabled) {
+  box-shadow: 2px 2px 0px 0px #000;
+}
+
+html[data-theme="light"] .save-btn:active:not(:disabled) {
+  box-shadow: 0px 0px 0px 0px #000;
 }
 
 /* ---- Toast ---- */

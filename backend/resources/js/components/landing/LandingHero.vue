@@ -157,7 +157,7 @@ onMounted(() => {
   height: 100%;
   object-fit: cover;
   z-index: 1; /* Positive z-index relative to .hero-section */
-  opacity: 0.6; /* Increased opacity */
+  opacity: 1; /* Full brightness */
   pointer-events: none;
   max-width: none !important; /* Force override of global CSS resets */
 }

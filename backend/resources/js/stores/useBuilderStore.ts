@@ -8,6 +8,7 @@ const generateId = () => `comp_${Math.random().toString(36).substring(2, 9)}`;
 export const useBuilderStore = defineStore('builder', () => {
   const components = ref<BuilderComponent[]>([]);
   const selectedComponentId = ref<string | null>(null);
+  const isAiGenerating = ref(false);
 
   // Hydrate from localStorage on load
   const savedState = localStorage.getItem('foundry_builder_state');
@@ -397,6 +398,33 @@ export const useBuilderStore = defineStore('builder', () => {
     }
   };
 
+  const appendAiComponents = (aiComponents: any[]) => {
+    commitHistory();
+    
+    // Helper to recursively ensure all components have valid IDs
+    const hydrateIds = (list: any[]): BuilderComponent[] => {
+      return list.map(comp => {
+        const newComp = { ...comp };
+        newComp.id = generateId(); // Overwrite with guaranteed unique ID
+        
+        // Ensure default properties exist if AI missed them
+        if (!newComp.props) newComp.props = {};
+        if (!newComp.styles) newComp.styles = {};
+        
+        if (newComp.children && Array.isArray(newComp.children)) {
+          newComp.children = hydrateIds(newComp.children);
+        }
+        return newComp as BuilderComponent;
+      });
+    };
+
+    const hydrated = hydrateIds(aiComponents);
+    if (hydrated.length > 0) {
+      components.value.push(...hydrated);
+      selectedComponentId.value = hydrated[0].id;
+    }
+  };
+
   const clearAll = () => {
     commitHistory();
     components.value = [];
@@ -421,7 +449,11 @@ export const useBuilderStore = defineStore('builder', () => {
     reorderComponents,
     addTemplate,
     addTemplateFromRegistry,
+    appendAiComponents,
     clearAll,
+    
+    // AI State
+    isAiGenerating,
     
     // Dirty state
     isDirty,

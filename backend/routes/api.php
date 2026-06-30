@@ -13,4 +13,5 @@ Route::get('/user', function (Request $request) {
 Route::get('/pages/slug/{slug}', [PageController::class, 'showBySlug']);
 Route::apiResource('pages', PageController::class)->except(['destroy']);
 Route::post('/ai/generate', [AiController::class, 'generate']);
+Route::post('/ai/generate-ui', [AiController::class, 'generateUi']);
 Route::post('/upload', [UploadController::class, 'store']);

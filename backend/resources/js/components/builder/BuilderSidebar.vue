@@ -75,7 +75,13 @@ const templates = [
         </div>
       </div>
     </div>
-  </div>
+
+    <div class="sidebar-footer" style="padding: 1rem; border-top: 1px solid var(--color-border); text-align: center;">
+      <button class="reset-button" @click="store.clearAll()" style="font-size: 12px; color: var(--color-text-tertiary); background: none; border: none; cursor: pointer; text-decoration: underline;">
+        Reset Canvas Data
+      </button>
+    </div>
+  </aside>
 </template>
 
 <style scoped>
