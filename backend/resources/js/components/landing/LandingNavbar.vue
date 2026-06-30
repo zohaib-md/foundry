@@ -48,7 +48,7 @@ const onTryFree = () => {
           
           <div class="mega-menu">
             <div class="mega-menu-content">
-              <a href="#engine" class="mega-item">
+              <a href="/editor" class="mega-item">
                 <div class="mega-icon-box">
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>
                 </div>
@@ -58,23 +58,13 @@ const onTryFree = () => {
                 </div>
               </a>
               
-              <a href="#ai" class="mega-item">
+              <a href="/editor?tour=ai" class="mega-item">
                 <div class="mega-icon-box">
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
                 </div>
                 <div class="mega-text">
                   <span class="mega-title">Foundry AI</span>
                   <span class="mega-desc">Generate entire sections and copy from a single prompt.</span>
-                </div>
-              </a>
-              
-              <a href="#analytics" class="mega-item">
-                <div class="mega-icon-box">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
-                </div>
-                <div class="mega-text">
-                  <span class="mega-title">Foundry Analytics</span>
-                  <span class="mega-desc">Real-time insights and traffic data built right in.</span>
                 </div>
               </a>
             </div>
@@ -209,7 +199,7 @@ const onTryFree = () => {
 
 .mega-menu {
   position: absolute;
-  top: calc(100% + 24px);
+  top: 100%; /* Gap closed by nav-dropdown-wrapper padding */
   left: -200px; /* Offset to center it better relative to the Product link */
   width: 500px;
   background: rgba(15, 15, 15, 0.75);

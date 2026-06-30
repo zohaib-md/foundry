@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import axios from 'axios';
 import { useBuilderStore } from '../../stores/useBuilderStore';
 
@@ -10,6 +10,35 @@ const isGenerating = ref(false);
 const errorMsg = ref('');
 const isFocused = ref(false);
 const showSuggestions = ref(false);
+const showTourPopup = ref(false);
+const tourText = ref('');
+const fullTourText = 'WRITE ANY PROMPT HERE TO GENERATE UI';
+
+onMounted(() => {
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.get('tour') === 'ai') {
+    showTourPopup.value = true;
+    
+    // Typewriter effect
+    let i = 0;
+    const typeWriter = setInterval(() => {
+      if (i < fullTourText.length) {
+        tourText.value += fullTourText.charAt(i);
+        i++;
+      } else {
+        clearInterval(typeWriter);
+      }
+    }, 40);
+    
+    setTimeout(() => {
+      showTourPopup.value = false;
+    }, 10000);
+    
+    // Clean up the URL without reloading the page
+    const newUrl = window.location.pathname;
+    window.history.replaceState({}, document.title, newUrl);
+  }
+});
 
 const generateUi = async () => {
   if (!prompt.value.trim()) return;
@@ -51,6 +80,7 @@ const usePrompt = (text: string) => {
 
 const onFocus = () => {
   isFocused.value = true;
+  showTourPopup.value = false;
 };
 
 const onBlur = () => {
@@ -63,6 +93,20 @@ const onBlur = () => {
 <template>
   <div class="ai-prompt-wrapper">
     <div class="ai-glow-effect"></div>
+    
+    <!-- Tour Popup -->
+    <Transition name="fade-bounce">
+      <div v-if="showTourPopup" class="tour-popup">
+        <div class="tour-popup-content">
+          <p>{{ tourText }}<span class="cursor" v-if="tourText.length < fullTourText.length">|</span></p>
+          <button class="tour-close" @click="showTourPopup = false">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          </button>
+        </div>
+        <div class="tour-arrow"></div>
+      </div>
+    </Transition>
+
     <div class="ai-prompt-container">
       <div class="ai-input-row">
         <input 
@@ -149,6 +193,110 @@ const onBlur = () => {
   animation: glow 6s ease infinite;
   z-index: -1;
   pointer-events: none;
+}
+
+/* ---- Tour Popup ---- */
+.tour-popup {
+  position: absolute;
+  top: 100%;
+  left: 20px;
+  margin-top: 16px;
+  z-index: 50;
+  filter: drop-shadow(4px 4px 0px rgba(0,0,0,1));
+}
+
+.tour-popup-content {
+  background: #000000;
+  color: #ffffff;
+  padding: 12px 18px;
+  border-radius: 4px;
+  border: 1px solid rgba(255,255,255,0.2);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-family: var(--font-mono, monospace);
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+
+.tour-popup-content p {
+  margin: 0;
+  display: flex;
+  align-items: center;
+}
+
+.cursor {
+  animation: blink 1s step-end infinite;
+  margin-left: 2px;
+  font-weight: bold;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+.tour-close {
+  background: transparent;
+  border: none;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255,255,255,0.5);
+  cursor: pointer;
+  padding: 0;
+  transition: all 0.2s ease;
+}
+
+.tour-close:hover {
+  color: #fff;
+  background: rgba(255,255,255,0.1);
+}
+
+.tour-arrow {
+  position: absolute;
+  top: -8px;
+  left: 24px;
+  width: 0;
+  height: 0;
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-bottom: 8px solid #000000;
+}
+
+/* Add a pseudo-element to simulate the border on the arrow */
+.tour-arrow::before {
+  content: '';
+  position: absolute;
+  top: 1px;
+  left: -9px;
+  border-left: 9px solid transparent;
+  border-right: 9px solid transparent;
+  border-bottom: 9px solid rgba(255,255,255,0.2);
+  z-index: -1;
+}
+
+.fade-bounce-enter-active {
+  animation: bounceIn 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.fade-bounce-leave-active {
+  transition: all 0.3s ease;
+}
+
+.fade-bounce-enter-from,
+.fade-bounce-leave-to {
+  opacity: 0;
+  transform: translateY(-10px);
+}
+
+@keyframes bounceIn {
+  0% { opacity: 0; transform: translateY(-20px) scale(0.95); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 @keyframes glow {
